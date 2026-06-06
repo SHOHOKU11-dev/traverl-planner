@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>하루 여행 플래너 — Kakao Maps</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1bf23e4e4bf17407ee3a0c0680628d9b&libraries=services,clusterer"></script>
+
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --card: #faf9f6;
+    --border: #e0dcd4;
+    --kakao: #FEE500;
+    --kakao-dark: #3C1E1E;
+    --kakao-brown: #7B5C3A;
+    --text: #1a1612;
+    --muted: #8a8070;
+    --success: #2d8a4e;
+    --danger: #c0392b;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Noto Sans KR', sans-serif; min-height: 100vh; }
+
+  .header {
+    background: var(--kakao); padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .header-logo {
+    width: 38px; height: 38px; background: var(--kakao-dark);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .header-title { font-size: 17px; font-weight: 900; color: var(--kakao-dark); }
+  .header-sub { font-size: 11px; color: var(--kakao-brown); margin-top: 1px; }
+  .header-badge {
+    margin-left: auto; background: var(--kakao-dark); color: var(--kakao);
+    font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .container { max-width: 700px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  .map-wrap {
+    background: var(--surface); border: 2px solid var(--kakao);
+    border-radius: 16px; overflow: hidden; margin-bottom: 16px;
+    box-shadow: var(--shadow-lg); position: relative;
+  }
+  #kakaoMap { width: 100%; height: 320px; }
+  .map-api-note {
+    background: var(--kakao); padding: 8px 14px; font-size: 11px;
+    color: var(--kakao-dark); font-weight: 600; display: flex; align-items: center; gap: 6px;
+  }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 12px; font-weight: 700; color: var(--kakao-brown);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 5px; font-weight: 500; }
+  input[type="text"], input[type="date"], input[type="time"], select {
+    width: 100%; background: var(--card); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; color: var(--text);
+    font-size: 13px; font-family: 'Noto Sans KR', sans-serif; outline: none; transition: border-color 0.2s;
+  }
+  input:focus, select:focus { border-color: var(--kakao-dark); }
+
+  .place-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .place-input-row select { flex: 0 0 120px; }
+  .place-input-row input { flex: 1; }
+  .btn-add {
+    background: var(--kakao-dark); border: none; border-radius: 10px;
+    padding: 10px 16px; color: var(--kakao); font-size: 18px; font-weight: 700;
+    cursor: pointer; flex-shrink: 0;
+  }
+
+  .place-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .place-emoji { font-size: 20px; }
+  .place-name { font-size: 13px; font-weight: 700; }
+  .place-cat { font-size: 11px; color: var(--muted); }
+  .btn-remove { margin-left: auto; background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; }
+
+  .empty-box {
+    text-align: center; padding: 24px; border: 1.5px dashed var(--border);
+    border-radius: 10px; color: var(--muted); font-size: 13px; line-height: 1.8;
+  }
+
+  .btn-generate {
+    width: 100%; padding: 16px; background: var(--kakao-dark); border: none;
+    border-radius: 14px; color: var(--kakao); font-size: 15px; font-weight: 900;
+    font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(60,30,30,0.2); display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-generate:hover { transform: translateY(-1px); }
+  .btn-generate:disabled { background: var(--border); color: var(--muted); transform: none; cursor: not-allowed; }
+
+  .result-header {
+    background: var(--kakao-dark); border-radius: 14px; padding: 20px; margin-bottom: 14px; color: var(--kakao);
+  }
+  .result-title { font-size: 20px; font-weight: 900; margin-bottom: 6px; }
+  .result-summary { font-size: 13px; color: #c8a96a; margin-bottom: 14px; }
+  .result-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    background: rgba(254,229,0,0.15); border: 1px solid rgba(254,229,0,0.3);
+    color: var(--kakao); font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600;
+  }
+
+  .timeline { display: flex; flex-direction: column; }
+  .timeline-item { display: flex; }
+  .timeline-left { display: flex; flex-direction: column; align-items: center; width: 48px; flex-shrink: 0; }
+  .timeline-dot {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 13px; cursor: pointer; transition: transform 0.2s; z-index: 1;
+  }
+  .timeline-dot:hover { transform: scale(1.1); }
+  .dot-mine { background: var(--kakao-dark); color: var(--kakao); }
+  .dot-rec { background: var(--success); color: #fff; }
+  .timeline-line { width: 2px; flex: 1; min-height: 20px; background: linear-gradient(to bottom, #3C1E1E44, transparent); margin: 4px 0; }
+
+  .timeline-card {
+    flex: 1; margin-left: 12px; margin-bottom: 12px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow);
+  }
+  .timeline-card.active { border-color: var(--kakao-dark); box-shadow: 0 4px 20px rgba(60,30,30,0.15); }
+
+  .tc-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--kakao-brown); margin-bottom: 4px; }
+  .tc-name { font-size: 15px; font-weight: 900; margin-bottom: 6px; }
+  .tc-tip { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 8px; }
+  .rec-badge {
+    display: inline-block; background: #e8f5ee; border: 1px solid #b8dfc8;
+    color: var(--success); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: 6px;
+  }
+  .rec-reason {
+    background: #f0faf4; border: 1px solid #c8e6d4; border-radius: 8px;
+    padding: 8px 12px; font-size: 12px; color: var(--success); margin-bottom: 8px;
+  }
+  .tc-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tc-tag {
+    background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+    font-size: 11px; padding: 2px 8px; border-radius: 20px; font-family: 'JetBrains Mono', monospace;
+  }
+  .error-box {
+    background: #fdf0ef; border: 1px solid #f5c6c2;
+    border-radius: 10px; padding: 10px 14px; color: var(--danger); font-size: 13px; margin-bottom: 14px;
+  }
+  .budget-bar {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+  }
+  .budget-label { font-size: 12px; color: var(--muted); }
+  .budget-value { font-size: 16px; font-weight: 900; color: var(--kakao-dark); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🗺️</div>
+  <div>
+    <div class="header-title">하루 여행 플래너</div>
+    <div class="header-sub">Kakao Maps 연동 버전</div>
+  </div>
+  <div class="header-badge">KAKAO</div>
+</div>
+
+<div class="container">
+  <div class="map-wrap">
+    <div id="kakaoMap"></div>
+    <div class="map-api-note">📌 카카오 지도 연동 완료 — 장소 추가 시 지도에 마커가 표시됩니다</div>
+  </div>
+
+  <div id="inputSection">
+    <div class="card">
+      <div class="card-title">📍 기본 정보</div>
+      <div class="input-grid">
+        <div>
+          <label>도시 / 지역 *</label>
+          <input type="text" id="city" placeholder="예: 서울 홍대, 부산, 제주">
+        </div>
+        <div>
+          <label>날짜</label>
+          <input type="date" id="date">
+        </div>
+      </div>
+      <div>
+        <label>출발 시간</label>
+        <input type="time" id="startTime" value="09:00" style="width:140px">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🗺️ 꼭 가고 싶은 장소</div>
+      <div class="place-input-row">
+        <select id="category">
+          <option>🍽️ 맛집/카페</option>
+          <option>🏛️ 관광지</option>
+          <option>🛍️ 쇼핑</option>
+          <option>🌿 자연</option>
+          <option>🎭 문화</option>
+          <option>📍 기타</option>
+        </select>
+        <input type="text" id="placeInput" placeholder="장소명 입력 후 Enter">
+        <button class="btn-add" onclick="addPlace()">+</button>
+      </div>
+      <div id="placeList">
+        <div class="empty-box">장소를 추가해주세요<br><span style="font-size:11px">AI가 나머지 동선을 완성해드립니다</span></div>
+      </div>
+    </div>
+
+    <div id="errorBox" class="error-box" style="display:none"></div>
+    <button class="btn-generate" onclick="generateSchedule()" id="genBtn">
+      <span>🚀</span> AI 여행 일정 생성하기
+    </button>
+  </div>
+
+  <div id="resultSection" style="display:none"></div>
+</div>
+
+<script>
+const EMOJI_MAP = {
+  "🍽️ 맛집/카페": "🍽️",
+  "🏛️ 관광지": "🏛️",
+  "🛍️ 쇼핑": "🛍️",
+  "🌿 자연": "🌿",
+  "🎭 문화": "🎭",
+  "📍 기타": "📍",
+};
+
+let myPlaces = [];
+let kakaoMap = null;
+let markers = [];
+let infowindows = [];
+
+// 카카오 지도 초기화
+kakao.maps.load(function() {
+  const container = document.getElementById('kakaoMap');
+  const options = {
+    center: new kakao.maps.LatLng(37.5665, 126.9780),
+    level: 5
+  };
+  kakaoMap = new kakao.maps.Map(container, options);
+});
+
+document.getElementById('placeInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addPlace();
+});
+
+function addPlace() {
+  const input = document.getElementById('placeInput');
+  const cat = document.getElementById('category').value;
+  const name = input.value.trim();
+  if (!name) return;
+  myPlaces.push({ name, category: cat });
+  input.value = '';
+  renderPlaces();
+  geocodeAndMark(name, myPlaces.length);
+}
+
+function removePlace(i) {
+  myPlaces.splice(i, 1);
+  // 마커 전체 초기화 후 재생성
+  markers.forEach(m => m.setMap(null));
+  infowindows = [];
+  markers = [];
+  myPlaces.forEach((p, idx) => geocodeAndMark(p.name, idx + 1));
+  renderPlaces();
+}
+
+function geocodeAndMark(placeName, order) {
+  if (!kakaoMap) return;
+  const ps = new kakao.maps.services.Places();
+  ps.keywordSearch(placeName, function(result, status) {
+    if (status !== kakao.maps.services.Status.OK) return;
+    const lat = result[0].y;
+    const lng = result[0].x;
+    const pos = new kakao.maps.LatLng(lat, lng);
+
+    const marker = new kakao.maps.Marker({ position: pos, map: kakaoMap });
+    const infowindow = new kakao.maps.InfoWindow({
+      content: `<div style="padding:8px 12px;font-size:13px;font-weight:700;color:#3C1E1E;white-space:nowrap">${order}. ${placeName}</div>`
+    });
+    kakao.maps.event.addListener(marker, 'click', function() {
+      infowindows.forEach(iw => iw.close());
+      infowindow.open(kakaoMap, marker);
+    });
+    markers.push(marker);
+    infowindows.push(infowindow);
+    kakaoMap.panTo(pos);
+  });
+}
+
+function renderPlaces() {
+  const el = document.getElementById('placeList');
+  if (myPlaces.length === 0) {
+    el.innerHTML = `<div class="empty-box">장소를 추가해주세요<br><span style="font-size:11px">AI가 나머지 동선을 완성해드립니다</span></div>`;
+    return;
+  }
+  el.innerHTML = myPlaces.map((p, i) => `
+    <div class="place-item">
+      <span class="place-emoji">${EMOJI_MAP[p.category] || '📍'}</span>
+      <div>
+        <div class="place-name">${p.name}</div>
+        <div class="place-cat">${p.category}</div>
+      </div>
+      <button class="btn-remove" onclick="removePlace(${i})">×</button>
+    </div>
+  `).join('');
+}
+
+async function generateSchedule() {
+  const city = document.getElementById('city').value.trim();
+  const date = document.getElementById('date').value;
+  const startTime = document.getElementById('startTime').value;
+  if (!city) { showError('도시/지역을 입력해주세요.'); return; }
+  if (myPlaces.length === 0) { showError('최소 1개 이상의 장소를 추가해주세요.'); return; }
+  hideError();
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>✨</span> AI가 최적의 일정을 구성 중...';
+
+  const prompt = `당신은 여행 전문가입니다. 아래 조건으로 하루 여행 일정을 JSON으로 만들어주세요.
+
+도시/지역: ${city}
+날짜: ${date || '미정'}
+시작 시간: ${startTime}
+내가 꼭 가고 싶은 장소: ${myPlaces.map(p => p.name + '(' + p.category + ')').join(', ')}
+
+지시사항:
+1. 내가 지정한 장소는 반드시 포함
+2. 동선을 고려해 이동 거리 최소화
+3. 2~3곳 추가 장소 추천 (식사, 카페, 숨은 명소 등)
+4. 각 장소마다 예상 소요시간, 이동수단, 꿀팁 포함
+5. 총 예산 추정
+
+JSON만 출력:
+{"title":"","summary":"","totalBudget":"","highlights":[],"places":[{"order":1,"time":"","name":"","category":"","duration":"","transport":"","tip":"","isRecommended":false,"recommendReason":""}]}`;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1500,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content.map(c => c.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const schedule = JSON.parse(clean);
+    renderResult(schedule);
+
+    // AI 추천 장소도 지도에 마커 추가
+    schedule.places.forEach((p, i) => {
+      if (p.isRecommended) geocodeAndMark(p.name, i + 1);
+    });
+  } catch (e) {
+    showError('일정 생성에 실패했습니다. 다시 시도해주세요.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>🚀</span> AI 여행 일정 생성하기';
+  }
+}
+
+function renderResult(schedule) {
+  document.getElementById('inputSection').style.display = 'none';
+  const el = document.getElementById('resultSection');
+  el.style.display = 'block';
+  const places = schedule.places || [];
+
+  el.innerHTML = `
+    <div class="result-header">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div style="flex:1">
+          <div class="result-title">${schedule.title}</div>
+          <div class="result-summary">${schedule.summary}</div>
+          <div class="result-tags">${(schedule.highlights||[]).map(h=>`<span class="tag">✦ ${h}</span>`).join('')}</div>
+        </div>
+        <button onclick="goBack()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(254,229,0,0.3);color:var(--kakao);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:12px;font-family:'Noto Sans KR',sans-serif">← 다시 계획</button>
+      </div>
+    </div>
+    <div class="budget-bar">
+      <div class="budget-label">💰 예상 총 비용</div>
+      <div class="budget-value">${schedule.totalBudget}</div>
+    </div>
+    <div class="timeline">
+      ${places.map((p, i) => `
+        <div class="timeline-item">
+          <div class="timeline-left">
+            <div class="timeline-dot ${p.isRecommended ? 'dot-rec' : 'dot-mine'}" onclick="focusMarker(${i})">${i+1}</div>
+            ${i < places.length-1 ? '<div class="timeline-line"></div>' : ''}
+          </div>
+          <div class="timeline-card ${i===0?'active':''}" onclick="focusMarker(${i})" id="card-${i}">
+            <div class="tc-time">${p.time}</div>
+            <div class="tc-name">📍 ${p.name}${p.isRecommended ? '<span class="rec-badge">AI 추천</span>' : ''}</div>
+            <div class="tc-tip">${p.tip}</div>
+            ${p.isRecommended && p.recommendReason ? `<div class="rec-reason">💡 ${p.recommendReason}</div>` : ''}
+            <div class="tc-tags">
+              <span class="tc-tag">⏱ ${p.duration}</span>
+              ${p.transport ? `<span class="tc-tag">🚶 ${p.transport}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function focusMarker(i) {
+  document.querySelectorAll('.timeline-card').forEach((c, idx) => c.classList.toggle('active', idx === i));
+  if (markers[i]) {
+    kakaoMap.panTo(markers[i].getPosition());
+    infowindows.forEach(iw => iw.close());
+    infowindows[i] && infowindows[i].open(kakaoMap, markers[i]);
+  }
+}
+
+function goBack() {
+  document.getElementById('resultSection').style.display = 'none';
+  document.getElementById('inputSection').style.display = 'block';
+}
+function showError(msg) { const el=document.getElementById('errorBox'); el.textContent=msg; el.style.display='block'; }
+function hideError() { document.getElementById('errorBox').style.display='none'; }
+</script>
+</body>
+</html>
