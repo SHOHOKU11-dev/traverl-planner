@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>하루 여행 플래너</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1bf23e4e4bf17407ee3a0c0680628d9b&libraries=services,clusterer&autoload=false"></script>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1bf23e4e4bf17407ee3a0c0680628d9b&libraries=services,clusterer"></script>
 <style>
   :root {
     --bg: #f5f3ee; --surface: #ffffff; --card: #faf9f6; --border: #e0dcd4;
@@ -15,24 +15,9 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Noto Sans KR', sans-serif; min-height: 100vh; }
-
-  /* 헤더 — 텍스트 제거, 심플하게 */
   .header { background: var(--kakao); padding: 14px 20px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
   .header-logo { width: 34px; height: 34px; background: var(--kakao-dark); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
   .header-title { font-size: 16px; font-weight: 900; color: var(--kakao-dark); }
-
-  /* API 키 입력 모달 */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .modal { background: var(--surface); border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); }
-  .modal-title { font-size: 16px; font-weight: 900; color: var(--kakao-dark); margin-bottom: 6px; }
-  .modal-desc { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.7; }
-  .modal-input { width: 100%; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; font-size: 13px; font-family: 'JetBrains Mono', monospace; outline: none; color: var(--text); margin-bottom: 10px; }
-  .modal-input:focus { border-color: var(--kakao-dark); }
-  .modal-link { font-size: 11px; color: var(--kakao-brown); margin-bottom: 16px; display: block; }
-  .modal-link a { color: var(--kakao-dark); font-weight: 700; }
-  .btn-modal { width: 100%; padding: 13px; background: var(--kakao-dark); border: none; border-radius: 10px; color: var(--kakao); font-size: 14px; font-weight: 900; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; }
-  .api-status { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--kakao-dark); cursor: pointer; background: rgba(0,0,0,0.1); padding: 4px 10px; border-radius: 20px; border: none; font-family: 'Noto Sans KR', sans-serif; font-weight: 600; }
-
   .container { max-width: 700px; margin: 0 auto; padding: 20px 16px 60px; }
   .map-wrap { background: var(--surface); border: 2px solid var(--kakao); border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow-lg); }
   #kakaoMap { width: 100%; height: 320px; background: #f0ede6; }
@@ -86,26 +71,9 @@
 </head>
 <body>
 
-<!-- API 키 입력 모달 -->
-<div class="modal-overlay" id="apiModal">
-  <div class="modal">
-    <div class="modal-title">🔑 Gemini API 키 입력</div>
-    <div class="modal-desc">
-      AI 일정 생성을 위해 본인의 Gemini API 키가 필요해요.<br>
-      키는 이 기기 메모리에만 저장되며 어디에도 전송되지 않아요.
-    </div>
-    <input class="modal-input" type="password" id="apiKeyInput" placeholder="AIza... 또는 AQ...로 시작하는 키">
-    <div class="modal-link">
-      키 발급: <a href="https://aistudio.google.com/api-keys" target="_blank">aistudio.google.com/api-keys</a>
-    </div>
-    <button class="btn-modal" onclick="saveApiKey()">저장하고 시작하기</button>
-  </div>
-</div>
-
 <div class="header">
   <div class="header-logo">🗺️</div>
   <div class="header-title">하루 여행 플래너</div>
-  
 </div>
 
 <div class="container">
@@ -164,50 +132,22 @@
 <script>
 const EMOJI_MAP = { "🍽️ 맛집/카페":"🍽️","🏛️ 관광지":"🏛️","🛍️ 쇼핑":"🛍️","🌿 자연":"🌿","🎭 문화":"🎭","📍 기타":"📍" };
 let myPlaces = [], kakaoMap = null, markers = [], infowindows = [];
-let geminiApiKey = null; // ✅ 메모리에만 저장
-
-// ✅ 앱 시작 시 API 키 모달 표시
-window.onload = function() {
-  const saved = sessionStorage.getItem('gemini_key');
-  if (saved) {
-    geminiApiKey = saved;
-    document.getElementById('apiModal').style.display = 'none';
-  }
-};
-
-function saveApiKey() {
-  const key = document.getElementById('apiKeyInput').value.trim();
-  if (!key) { alert('API 키를 입력해주세요.'); return; }
-  geminiApiKey = key;
-  sessionStorage.setItem('gemini_key', key); // 탭 닫으면 자동 삭제
-  document.getElementById('apiModal').style.display = 'none';
-}
-
-function showApiModal() {
-  document.getElementById('apiKeyInput').value = '';
-  document.getElementById('apiModal').style.display = 'flex';
-}
 
 function esc(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-kakao.maps.load(function () {
+window.onload = function() {
   try {
     kakaoMap = new kakao.maps.Map(document.getElementById('kakaoMap'), {
-      center: new kakao.maps.LatLng(37.5665, 126.9780),
-      level: 5
+      center: new kakao.maps.LatLng(37.5665, 126.9780), level: 5
     });
     document.getElementById('mapNote').textContent = '📌 장소를 추가하면 지도에 마커가 표시됩니다';
   } catch(e) {
-    document.getElementById('mapNote').textContent = '⚠️ 지도 로딩 실패';
+    document.getElementById('mapNote').textContent = '⚠️ 지도 로딩 실패 — 카카오 도메인 등록을 확인해주세요';
     console.error(e);
   }
-});
+};
 
 document.getElementById('placeInput').addEventListener('keydown', e => { if (e.key === 'Enter') addPlace(); });
 
@@ -220,8 +160,7 @@ function addPlace() {
   input.value = '';
   renderPlaces();
   const city = document.getElementById('city').value.trim();
-  const query = city ? `${city} ${name}` : name;
-  geocodeAndMark(query, name, myPlaces.length);
+  geocodeAndMark(city ? `${city} ${name}` : name, name, myPlaces.length);
 }
 
 function removePlace(i) {
@@ -229,10 +168,7 @@ function removePlace(i) {
   markers.forEach(m => m.setMap(null));
   markers = []; infowindows = [];
   const city = document.getElementById('city').value.trim();
-  myPlaces.forEach((p, idx) => {
-    const query = city ? `${city} ${p.name}` : p.name;
-    geocodeAndMark(query, p.name, idx + 1);
-  });
+  myPlaces.forEach((p, idx) => geocodeAndMark(city ? `${city} ${p.name}` : p.name, p.name, idx + 1));
   renderPlaces();
 }
 
@@ -240,7 +176,7 @@ function geocodeAndMark(query, displayName, order) {
   if (!kakaoMap) return;
   new kakao.maps.services.Places().keywordSearch(query, function (result, status) {
     if (status !== kakao.maps.services.Status.OK) {
-      showError(`"${displayName}" 위치를 찾지 못했습니다. 장소명을 더 구체적으로 입력해보세요.`);
+      showError(`"${displayName}" 위치를 찾지 못했습니다.`);
       return;
     }
     const pos = new kakao.maps.LatLng(result[0].y, result[0].x);
@@ -258,10 +194,7 @@ function geocodeAndMark(query, displayName, order) {
 
 function renderPlaces() {
   const el = document.getElementById('placeList');
-  if (!myPlaces.length) {
-    el.innerHTML = `<div class="empty-box">장소를 추가해주세요<br><span style="font-size:11px">AI가 나머지 동선을 완성해드립니다</span></div>`;
-    return;
-  }
+  if (!myPlaces.length) { el.innerHTML = `<div class="empty-box">장소를 추가해주세요<br><span style="font-size:11px">AI가 나머지 동선을 완성해드립니다</span></div>`; return; }
   el.innerHTML = myPlaces.map((p, i) => `
     <div class="place-item">
       <span class="place-emoji">${EMOJI_MAP[p.category]||'📍'}</span>
@@ -271,8 +204,6 @@ function renderPlaces() {
 }
 
 async function generateSchedule() {
-  if (!geminiApiKey) { showApiModal(); return; }
-
   const city = document.getElementById('city').value.trim();
   const date = document.getElementById('date').value;
   const startTime = document.getElementById('startTime').value;
@@ -288,7 +219,7 @@ async function generateSchedule() {
 도시/지역: ${city}
 날짜: ${date || '미정'}
 시작 시간: ${startTime}
-내가 꼭 가고 싶은 장소: ${myPlaces.map(p => p.name + '(' + p.category + ')').join(', ')}
+내가 꼭 가고 싶은 장소: ${myPlaces.map(p => p.name+'('+p.category+')').join(', ')}
 지시사항:
 1. 내가 지정한 장소는 반드시 포함
 2. 동선을 고려해 이동 거리 최소화
@@ -299,32 +230,19 @@ async function generateSchedule() {
 {"title":"","summary":"","totalBudget":"","highlights":[],"places":[{"order":1,"time":"","name":"","category":"","duration":"","transport":"","tip":"","isRecommended":false,"recommendReason":""}]}`;
 
   try {
-    // ✅ Netlify 함수 없이 Gemini 직접 호출
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 2000,
-            responseMimeType: 'application/json',
-          },
-        }),
-      }
-    );
+    // ✅ Netlify 함수 경유 — CORS 우회
+    const res = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
+    });
 
-    if (res.status === 429) throw new Error('요청 한도 초과입니다. 1분 후 다시 시도해주세요.');
-    if (res.status === 400) throw new Error('API 키가 올바르지 않습니다. 키를 다시 확인해주세요.');
-    if (!res.ok) throw new Error(`오류가 발생했습니다. (HTTP ${res.status})`);
+    if (!res.ok) throw new Error(`서버 오류: HTTP ${res.status}`);
 
     const data = await res.json();
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!rawText) throw new Error('AI 응답이 비어있습니다. 다시 시도해주세요.');
+    if (!data.text) throw new Error(data.error || '응답에 내용이 없습니다.');
 
-    const clean = String(rawText).replace(/```json|```/g, '').trim();
+    const clean = String(data.text).replace(/```json|```/g, '').trim();
     let schedule;
     try {
       schedule = JSON.parse(clean);
@@ -340,14 +258,10 @@ async function generateSchedule() {
 
     renderResult(schedule);
     schedule.places.forEach((p, i) => {
-      if (p.isRecommended) {
-        const query = city ? `${city} ${p.name}` : p.name;
-        geocodeAndMark(query, p.name, i + 1);
-      }
+      if (p.isRecommended) geocodeAndMark(city ? `${city} ${p.name}` : p.name, p.name, i + 1);
     });
 
   } catch (e) {
-    console.error('일정 생성 오류:', e.message);
     showError(e.message);
   } finally {
     btn.disabled = false;
@@ -398,11 +312,7 @@ function renderResult(schedule) {
 
 function focusMarker(i) {
   document.querySelectorAll('.timeline-card').forEach((c,idx)=>c.classList.toggle('active',idx===i));
-  if (markers[i]) {
-    kakaoMap.panTo(markers[i].getPosition());
-    infowindows.forEach(w=>w.close());
-    if (infowindows[i]) infowindows[i].open(kakaoMap, markers[i]);
-  }
+  if (markers[i]) { kakaoMap.panTo(markers[i].getPosition()); infowindows.forEach(w=>w.close()); if(infowindows[i]) infowindows[i].open(kakaoMap,markers[i]); }
 }
 function goBack() { document.getElementById('resultSection').style.display='none'; document.getElementById('inputSection').style.display='block'; }
 function showError(msg) { const el=document.getElementById('errorBox'); el.textContent=msg; el.style.display='block'; }
