@@ -26,7 +26,6 @@ exports.handler = async function (event) {
       return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: "GEMINI_API_KEY가 없습니다." }) };
     }
 
-    // ✅ gemini-2.5-flash 로 변경 (2026년 6월 현재 최신 무료 모델)
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
@@ -37,6 +36,7 @@ exports.handler = async function (event) {
           generationConfig: {
             temperature: 0.3,
             maxOutputTokens: 2000,
+            // ✅ responseMimeType 제거 — 2.5-flash 호환성 문제
           },
         }),
       }
@@ -61,7 +61,24 @@ exports.handler = async function (event) {
       return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: "Gemini 응답이 비었습니다." }) };
     }
 
-    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ text }) };
+    // ✅ 서버에서 JSON 추출 후 검증
+    const clean = text.replace(/```json|```/g, '').trim();
+    let parsed;
+    try {
+      parsed = JSON.parse(clean);
+    } catch {
+      const match = clean.match(/\{[\s\S]*\}/);
+      if (!match) {
+        return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: "JSON 파싱 실패", raw: text.slice(0, 200) }) };
+      }
+      parsed = JSON.parse(match[0]);
+    }
+
+    if (!parsed.places || !Array.isArray(parsed.places)) {
+      return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: "일정 데이터 형식 오류", raw: text.slice(0, 200) }) };
+    }
+
+    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ text: JSON.stringify(parsed) }) };
 
   } catch (err) {
     return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: err.message }) };
