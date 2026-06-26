@@ -26,8 +26,9 @@ exports.handler = async function (event) {
       return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: "GEMINI_API_KEY가 없습니다." }) };
     }
 
+    // ✅ gemini-2.5-flash-lite: thinking 없고 빠름
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -36,6 +37,7 @@ exports.handler = async function (event) {
           generationConfig: {
             temperature: 0.3,
             maxOutputTokens: 2000,
+            responseMimeType: "application/json",
           },
         }),
       }
@@ -55,7 +57,6 @@ exports.handler = async function (event) {
       };
     }
 
-    // ✅ 파싱 없이 텍스트 그대로 전달 — 프론트에서 처리
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
       return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: "Gemini 응답이 비었습니다." }) };
