@@ -37,6 +37,8 @@
   .place-name { font-size: 13px; font-weight: 700; }
   .place-cat { font-size: 11px; color: var(--muted); }
   .btn-remove { margin-left: auto; background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; }
+  .place-time-badge { background: var(--kakao); color: var(--kakao-dark); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+  .place-input-time { width: 90px !important; flex-shrink: 0; font-size: 12px !important; padding: 10px 8px !important; }
   .empty-box { text-align: center; padding: 24px; border: 1.5px dashed var(--border); border-radius: 10px; color: var(--muted); font-size: 13px; line-height: 1.8; }
   .btn-generate { width: 100%; padding: 16px; background: var(--kakao-dark); border: none; border-radius: 14px; color: var(--kakao); font-size: 15px; font-weight: 900; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 16px rgba(60,30,30,0.2); display: flex; align-items: center; justify-content: center; gap: 8px; }
   .btn-generate:hover { transform: translateY(-1px); }
@@ -115,6 +117,11 @@
         <input type="text" id="placeInput" placeholder="장소명 입력 후 Enter">
         <button class="btn-add" onclick="addPlace()">+</button>
       </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <label style="margin:0;white-space:nowrap">⏰ 방문 희망 시간</label>
+        <input type="time" id="placeTime" class="place-input-time" placeholder="선택사항">
+        <span style="font-size:11px;color:var(--muted)">(선택사항)</span>
+      </div>
       <div id="placeList">
         <div class="empty-box">장소를 추가해주세요<br><span style="font-size:11px">AI가 나머지 동선을 완성해드립니다</span></div>
       </div>
@@ -155,9 +162,11 @@ function addPlace() {
   const input = document.getElementById('placeInput');
   const name = input.value.trim();
   const cat = document.getElementById('category').value;
+  const time = document.getElementById('placeTime').value;
   if (!name) return;
-  myPlaces.push({ name, category: cat });
+  myPlaces.push({ name, category: cat, time });
   input.value = '';
+  document.getElementById('placeTime').value = '';
   renderPlaces();
   const city = document.getElementById('city').value.trim();
   geocodeAndMark(city ? `${city} ${name}` : name, name, myPlaces.length);
@@ -198,7 +207,10 @@ function renderPlaces() {
   el.innerHTML = myPlaces.map((p, i) => `
     <div class="place-item">
       <span class="place-emoji">${EMOJI_MAP[p.category]||'📍'}</span>
-      <div><div class="place-name">${esc(p.name)}</div><div class="place-cat">${esc(p.category)}</div></div>
+      <div>
+        <div class="place-name">${esc(p.name)}</div>
+        <div class="place-cat">${esc(p.category)}${p.time ? ` · <span class="place-time-badge">⏰ ${esc(p.time)}</span>` : ''}</div>
+      </div>
       <button class="btn-remove" onclick="removePlace(${i})">×</button>
     </div>`).join('');
 }
@@ -219,9 +231,9 @@ async function generateSchedule() {
 도시/지역: ${city}
 날짜: ${date || '미정'}
 시작 시간: ${startTime}
-내가 꼭 가고 싶은 장소: ${myPlaces.map(p => p.name+'('+p.category+')').join(', ')}
+내가 꼭 가고 싶은 장소: ${myPlaces.map(p => p.name+'('+p.category+(p.time?', 방문희망시간:'+p.time:'')+')').join(', ')}
 지시사항:
-1. 내가 지정한 장소는 반드시 포함
+1. 내가 지정한 장소는 반드시 포함 (방문희망시간이 있으면 그 시간에 정확히 배치)
 2. 동선을 고려해 이동 거리 최소화
 3. 2~3곳 추가 장소 추천 (식사, 카페, 숨은 명소 등)
 4. 각 장소마다 예상 소요시간, 이동수단, 꿀팁 포함
