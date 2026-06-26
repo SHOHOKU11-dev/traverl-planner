@@ -26,9 +26,9 @@ exports.handler = async function (event) {
       return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: "GEMINI_API_KEY가 없습니다." }) };
     }
 
-    // ✅ gemini-2.0-flash 로 변경
+    // ✅ gemini-2.5-flash 로 변경 (2026년 6월 현재 최신 무료 모델)
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -37,7 +37,6 @@ exports.handler = async function (event) {
           generationConfig: {
             temperature: 0.3,
             maxOutputTokens: 2000,
-            responseMimeType: "application/json",
           },
         }),
       }
