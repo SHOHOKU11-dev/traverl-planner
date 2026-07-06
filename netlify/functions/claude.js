@@ -1,7 +1,7 @@
 exports.handler = async function (event) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, X-Gemini-Key",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Content-Type": "application/json",
   };
@@ -15,18 +15,18 @@ exports.handler = async function (event) {
   }
 
   try {
-    const body = event.body ? JSON.parse(event.body) : {};
+    const body = JSON.parse(event.body || "{}");
     const prompt = body.messages?.[0]?.content;
     if (!prompt) {
       return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: "prompt가 없습니다." }) };
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    // ✅ 사용자 개인 키를 헤더에서 받음
+    const apiKey = event.headers["x-gemini-key"] || event.headers["X-Gemini-Key"];
     if (!apiKey) {
-      return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: "GEMINI_API_KEY가 없습니다." }) };
+      return { statusCode: 401, headers: corsHeaders, body: JSON.stringify({ error: "API 키가 없습니다." }) };
     }
 
-    // ✅ gemini-2.5-flash-lite: thinking 없고 빠름
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
       {
@@ -34,15 +34,14 @@ exports.handler = async function (event) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 2000,
-            responseMimeType: "application/json",
-          },
+          generationConfig: { temperature: 0.3, maxOutputTokens: 2000 },
         }),
       }
     );
 
+    if (response.status === 401) {
+      return { statusCode: 401, headers: corsHeaders, body: JSON.stringify({ error: "API 키가 유효하지 않습니다." }) };
+    }
     if (response.status === 429) {
       return { statusCode: 429, headers: corsHeaders, body: JSON.stringify({ error: "요청 한도 초과입니다. 1분 후 다시 시도해주세요." }) };
     }
@@ -50,11 +49,7 @@ exports.handler = async function (event) {
     const data = await response.json();
 
     if (!response.ok) {
-      return {
-        statusCode: response.status,
-        headers: corsHeaders,
-        body: JSON.stringify({ error: "Gemini API 오류", detail: JSON.stringify(data) })
-      };
+      return { statusCode: response.status, headers: corsHeaders, body: JSON.stringify({ error: "Gemini API 오류", detail: JSON.stringify(data) }) };
     }
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
