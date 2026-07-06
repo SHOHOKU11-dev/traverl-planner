@@ -15,9 +15,13 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Noto Sans KR', sans-serif; min-height: 100vh; }
-  .header { background: var(--kakao); padding: 14px 20px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-  .header-logo { width: 34px; height: 34px; background: var(--kakao-dark); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-  .header-title { font-size: 16px; font-weight: 900; color: var(--kakao-dark); }
+  .header { background: var(--kakao); padding: 12px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 64px; }
+  .header-logo { width: 34px; height: 34px; background: var(--kakao-dark); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .header-left { display: flex; flex-direction: column; gap: 1px; }
+  .header-title { font-size: 15px; font-weight: 900; color: var(--kakao-dark); line-height: 1.2; }
+  .header-desc { font-size: 10px; color: var(--kakao-brown); line-height: 1.3; }
+  .header-features { margin-left: auto; display: flex; flex-direction: column; gap: 2px; align-items: flex-end; }
+  .header-feature-item { font-size: 10px; color: var(--kakao-dark); font-weight: 600; white-space: nowrap; }
   .container { max-width: 700px; margin: 0 auto; padding: 20px 16px 60px; }
   .map-wrap { background: var(--surface); border: 2px solid var(--kakao); border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow-lg); }
   #kakaoMap { width: 100%; height: 320px; background: #f0ede6; }
@@ -26,7 +30,7 @@
   .card-title { font-size: 12px; font-weight: 700; color: var(--kakao-brown); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
   .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
   label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 5px; font-weight: 500; }
-  input[type="text"], input[type="date"], input[type="time"], select { width: 100%; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 12px; color: var(--text); font-size: 13px; font-family: 'Noto Sans KR', sans-serif; outline: none; transition: border-color 0.2s; }
+  input[type="text"], input[type="date"], input[type="time"], input[type="number"], select { width: 100%; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 12px; color: var(--text); font-size: 13px; font-family: 'Noto Sans KR', sans-serif; outline: none; transition: border-color 0.2s; }
   input:focus, select:focus { border-color: var(--kakao-dark); }
   .place-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
   .place-input-row select { flex: 0 0 120px; }
@@ -36,11 +40,12 @@
   .place-emoji { font-size: 20px; }
   .place-name { font-size: 13px; font-weight: 700; }
   .place-cat { font-size: 11px; color: var(--muted); }
-  .btn-remove { margin-left: auto; background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; }
-  .btn-naver { display: inline-flex; align-items: center; gap: 4px; background: #03C75A; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: none; white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; }
+  .btn-remove { margin-left: auto; background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; flex-shrink: 0; }
+  .btn-naver { display: inline-flex; align-items: center; gap: 4px; background: #03C75A; color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: none; white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; }
   .btn-naver:hover { background: #02a34a; }
-  .place-time-badge { background: var(--kakao); color: var(--kakao-dark); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
-  .place-input-time { width: 90px !important; flex-shrink: 0; font-size: 12px !important; padding: 10px 8px !important; }
+  .btn-refresh { display: inline-flex; align-items: center; gap: 4px; background: var(--kakao-dark); color: var(--kakao); border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; }
+  .btn-refresh:disabled { opacity: 0.4; cursor: not-allowed; }
+  .place-time-badge { background: var(--kakao); color: var(--kakao-dark); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; }
   .empty-box { text-align: center; padding: 24px; border: 1.5px dashed var(--border); border-radius: 10px; color: var(--muted); font-size: 13px; line-height: 1.8; }
   .btn-generate { width: 100%; padding: 16px; background: var(--kakao-dark); border: none; border-radius: 14px; color: var(--kakao); font-size: 15px; font-weight: 900; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 16px rgba(60,30,30,0.2); display: flex; align-items: center; justify-content: center; gap: 8px; }
   .btn-generate:hover { transform: translateY(-1px); }
@@ -48,8 +53,11 @@
   .result-header { background: var(--kakao-dark); border-radius: 14px; padding: 20px; margin-bottom: 14px; color: var(--kakao); }
   .result-title { font-size: 20px; font-weight: 900; margin-bottom: 6px; }
   .result-summary { font-size: 13px; color: #c8a96a; margin-bottom: 14px; }
-  .result-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .result-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
   .tag { background: rgba(254,229,0,0.15); border: 1px solid rgba(254,229,0,0.3); color: var(--kakao); font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+  .result-actions { display: flex; gap: 8px; }
+  .btn-back { flex: 1; padding: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(254,229,0,0.3); border-radius: 8px; color: var(--kakao); font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
+  .btn-pdf { flex: 1; padding: 10px; background: var(--kakao); border: none; border-radius: 8px; color: var(--kakao-dark); font-size: 13px; font-weight: 900; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
   .budget-bar { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .budget-label { font-size: 12px; color: var(--muted); }
   .budget-value { font-size: 16px; font-weight: 900; color: var(--kakao-dark); }
@@ -61,29 +69,157 @@
   .dot-mine { background: var(--kakao-dark); color: var(--kakao); }
   .dot-rec { background: var(--success); color: #fff; }
   .timeline-line { width: 2px; flex: 1; min-height: 20px; background: linear-gradient(to bottom, #3C1E1E44, transparent); margin: 4px 0; }
-  .timeline-card { flex: 1; margin-left: 12px; margin-bottom: 12px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow); }
+  .transit-info { background: #fff8e1; border: 1px solid var(--kakao); border-radius: 8px; padding: 6px 12px; font-size: 11px; color: var(--kakao-dark); font-weight: 600; margin: 2px 0 8px 0; display: flex; gap: 10px; align-items: center; }
+  .timeline-card { flex: 1; margin-left: 12px; margin-bottom: 4px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px 16px; transition: all 0.2s; box-shadow: var(--shadow); }
   .timeline-card.active { border-color: var(--kakao-dark); box-shadow: 0 4px 20px rgba(60,30,30,0.15); }
   .tc-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--kakao-brown); margin-bottom: 4px; }
   .tc-name { font-size: 15px; font-weight: 900; margin-bottom: 6px; }
   .tc-tip { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 8px; }
   .rec-badge { display: inline-block; background: #e8f5ee; border: 1px solid #b8dfc8; color: var(--success); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: 6px; }
   .rec-reason { background: #f0faf4; border: 1px solid #c8e6d4; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--success); margin-bottom: 8px; }
-  .tc-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tc-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
   .tc-tag { background: var(--bg); border: 1px solid var(--border); color: var(--muted); font-size: 11px; padding: 2px 8px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; }
+  .tc-btns { display: flex; gap: 6px; flex-wrap: wrap; }
   .mood-input { width: 100%; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 12px; color: var(--text); font-size: 13px; font-family: 'Noto Sans KR', sans-serif; outline: none; resize: none; transition: border-color 0.2s; }
   .mood-input:focus { border-color: var(--kakao-dark); }
   .companion-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
   .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
   .chip { background: var(--card); border: 1.5px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; color: var(--muted); font-family: 'Noto Sans KR', sans-serif; }
   .chip.active { background: var(--kakao-dark); border-color: var(--kakao-dark); color: var(--kakao); }
+  .limit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .error-box { background: #fdf0ef; border: 1px solid #f5c6c2; border-radius: 10px; padding: 10px 14px; color: var(--danger); font-size: 13px; margin-bottom: 14px; }
+  /* 사용방법 팝업 */
+  .guide-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 150; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .guide-overlay.hidden { display: none; }
+  .guide-box { background: var(--surface); border-radius: 16px; padding: 24px; width: 100%; max-width: 380px; box-shadow: var(--shadow-lg); }
+  .guide-title { font-size: 16px; font-weight: 900; color: var(--kakao-dark); margin-bottom: 4px; }
+  .guide-subtitle { font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+  .guide-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .guide-step { display: flex; gap: 10px; align-items: flex-start; }
+  .guide-num { width: 22px; height: 22px; background: var(--kakao-dark); color: var(--kakao); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; flex-shrink: 0; margin-top: 1px; }
+  .guide-text { font-size: 12px; color: var(--text); line-height: 1.6; }
+  .guide-text b { color: var(--kakao-dark); }
+  .btn-guide-close { width: 100%; padding: 12px; background: var(--kakao-dark); border: none; border-radius: 10px; color: var(--kakao); font-size: 14px; font-weight: 900; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
+
+  /* API 키 입력 모달 */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.hidden { display: none; }
+  .modal-box { background: var(--surface); border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); }
+  .modal-title { font-size: 17px; font-weight: 900; color: var(--kakao-dark); margin-bottom: 6px; }
+  .modal-desc { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.8; }
+  .modal-input { width: 100%; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; font-size: 13px; font-family: 'JetBrains Mono', monospace; outline: none; color: var(--text); margin-bottom: 6px; }
+  .modal-input:focus { border-color: var(--kakao-dark); }
+  .modal-link { font-size: 11px; color: var(--muted); margin-bottom: 16px; display: block; }
+  .modal-link a { color: var(--kakao-dark); font-weight: 700; }
+  .modal-error { font-size: 11px; color: var(--danger); margin-bottom: 10px; display: none; }
+  .btn-modal { width: 100%; padding: 13px; background: var(--kakao-dark); border: none; border-radius: 10px; color: var(--kakao); font-size: 14px; font-weight: 900; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; }
+  .btn-key-change { background: none; border: none; color: var(--kakao-dark); font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: underline; margin-left: auto; font-family: 'Noto Sans KR', sans-serif; }
+
+  @media print {
+    .header, .map-wrap, .result-actions, .btn-naver, .btn-refresh, .timeline-dot, .tc-btns { display: none !important; }
+    .container { padding: 0; }
+    .timeline-card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; margin-bottom: 12px; }
+    .transit-info { border: 1px solid #ddd; background: #f9f9f9; }
+    body { background: white; }
+    .result-header { background: #3C1E1E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
 </style>
 </head>
 <body>
 
+<!-- API 키 입력 모달 -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal-box">
+    <div class="modal-title">🔑 Gemini API 키 입력</div>
+    <div class="modal-desc">
+      AI 일정 생성을 위해 본인의 Gemini API 키가 필요해요.<br>
+      키는 이 기기 메모리에만 저장되며 탭을 닫으면 자동 삭제돼요.<br>
+      서버에는 전달만 되고 저장되지 않아요.
+    </div>
+    <input class="modal-input" type="password" id="apiKeyInput" placeholder="AIza...로 시작하는 키 입력">
+    <div class="modal-error" id="modalError"></div>
+    <div class="modal-link">
+      무료 키 발급: <a href="https://aistudio.google.com/api-keys" target="_blank">aistudio.google.com/api-keys</a>
+    </div>
+    <button class="btn-modal" onclick="saveApiKey()">시작하기</button>
+  </div>
+</div>
+
+<!-- 사용법 안내 모달 (API 키 입력 후 표시) -->
+<div class="modal-overlay hidden" id="guideModal">
+  <div class="modal-box">
+    <div class="modal-title">📖 사용 방법</div>
+    <div class="modal-desc" style="margin-bottom:18px;">
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <span style="font-weight:900;color:var(--kakao-dark)">1</span>
+        <span>도시, 날짜, 동행자, 분위기를 설정해주세요</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <span style="font-weight:900;color:var(--kakao-dark)">2</span>
+        <span>가고 싶은 장소를 추가하세요 (방문 희망 시간도 지정 가능)</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <span style="font-weight:900;color:var(--kakao-dark)">3</span>
+        <span>AI 여행 일정 생성하기 버튼을 클릭하세요</span>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <span style="font-weight:900;color:var(--kakao-dark)">4</span>
+        <span>완성된 일정을 확인하고 필요하면 장소를 교체하거나 PDF로 저장하세요</span>
+      </div>
+    </div>
+    <button class="btn-modal" onclick="closeGuideModal()">시작하기</button>
+  </div>
+</div>
+
+<!-- 사용방법 팝업 -->
+<div class="guide-overlay hidden" id="guideModal">
+  <div class="guide-box">
+    <div class="guide-title">📋 사용 방법</div>
+    <div class="guide-subtitle">처음 사용하시는 분을 위한 안내입니다</div>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="guide-num">1</div>
+        <div class="guide-text"><b>Gemini API 키 발급</b><br><a href="https://aistudio.google.com/api-keys" target="_blank" style="color:var(--kakao-dark);">aistudio.google.com</a>에서 무료로 발급받아 입력해주세요</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">2</div>
+        <div class="guide-text"><b>기본 정보 입력</b><br>도시, 날짜, 출발 시간을 설정해주세요</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">3</div>
+        <div class="guide-text"><b>동행자 & 분위기 설정</b><br>누구와, 어떤 느낌의 여행인지 선택해주세요</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">4</div>
+        <div class="guide-text"><b>장소 추가</b><br>가고 싶은 장소를 추가해주세요. 방문 희망 시간도 지정할 수 있어요</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">5</div>
+        <div class="guide-text"><b>AI 일정 생성</b><br>버튼을 누르면 동선 최적화된 하루 일정이 완성돼요</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">6</div>
+        <div class="guide-text"><b>일정 활용</b><br>마음에 안 드는 장소는 🔄 교체, N 예약으로 바로 예약, 🖨️ PDF로 저장할 수 있어요</div>
+      </div>
+    </div>
+    <button class="btn-guide-close" onclick="closeGuide()">시작하기 🚀</button>
+  </div>
+</div>
+
 <div class="header">
   <div class="header-logo">🗺️</div>
-  <div class="header-title">하루 여행 플래너</div>
+  <div class="header-left">
+    <div class="header-title">하루 여행 플래너</div>
+    <div class="header-desc">원하는 장소를 입력하면 AI가 동선을 고려해 하루 일정을 자동으로 짜드립니다</div>
+  </div>
+  <div class="header-features">
+    <div class="header-feature-item">🗺️ 카카오 지도 마커</div>
+    <div class="header-feature-item">🔄 장소 교체</div>
+    <div class="header-feature-item">🚶 실제 이동시간</div>
+    <div class="header-feature-item">N 네이버 예약</div>
+    <div class="header-feature-item">🖨️ PDF 저장</div>
+    <button class="btn-key-change" onclick="showApiModal()" style="margin-top:2px;">🔑 키 변경</button>
+  </div>
 </div>
 
 <div class="container">
@@ -96,22 +232,12 @@
     <div class="card">
       <div class="card-title">📍 기본 정보</div>
       <div class="input-grid">
-        <div>
-          <label>도시 / 지역 *</label>
-          <input type="text" id="city" placeholder="예: 서울 홍대, 부산, 제주">
-        </div>
-        <div>
-          <label>날짜</label>
-          <input type="date" id="date">
-        </div>
+        <div><label>도시 / 지역 *</label><input type="text" id="city" placeholder="예: 서울 홍대, 부산, 제주"></div>
+        <div><label>날짜</label><input type="date" id="date"></div>
       </div>
-      <div>
-        <label>출발 시간</label>
-        <input type="time" id="startTime" value="09:00" style="width:140px">
-      </div>
+      <div><label>출발 시간</label><input type="time" id="startTime" value="09:00" style="width:140px"></div>
     </div>
 
-    <!-- 동행자 설정 -->
     <div class="card">
       <div class="card-title">👥 동행자 설정</div>
       <div class="companion-grid">
@@ -146,7 +272,6 @@
       </div>
     </div>
 
-    <!-- 분위기 설정 -->
     <div class="card">
       <div class="card-title">✨ 어떤 느낌의 만남을 원하세요?</div>
       <div class="chip-group" style="margin-bottom:10px;" id="moodChips">
@@ -160,7 +285,16 @@
         <button class="chip" onclick="toggleChip(this,'mood')">🎮 액티비티</button>
       </div>
       <label>직접 입력 (선택사항)</label>
-      <textarea class="mood-input" id="moodText" rows="2" placeholder="예: 오랜만에 만나는 친구들과 추억 쌓기, 조용한 카페에서 대화 위주로..."></textarea>
+      <textarea class="mood-input" id="moodText" rows="2" placeholder="예: 오랜만에 만나는 친구들과 추억 쌓기..."></textarea>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💰 예산 및 이동시간 제한</div>
+      <div class="limit-grid">
+        <div><label>총 예산 한도 (원)</label><input type="number" id="budgetLimit" placeholder="예: 50000" min="0" step="5000"></div>
+        <div><label>장소 간 최대 이동시간 (분)</label><input type="number" id="transportLimit" placeholder="예: 30" min="0" step="5"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;">※ 비워두면 제한 없이 구성합니다</div>
     </div>
 
     <div class="card">
@@ -179,7 +313,7 @@
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <label style="margin:0;white-space:nowrap">⏰ 방문 희망 시간</label>
-        <input type="time" id="placeTime" class="place-input-time" placeholder="선택사항">
+        <input type="time" id="placeTime" style="width:120px">
         <span style="font-size:11px;color:var(--muted)">(선택사항)</span>
       </div>
       <div id="placeList">
@@ -194,50 +328,116 @@
   </div>
 
   <div id="resultSection" style="display:none"></div>
+  </div>
+
+  <!-- 주요 기능 사이드 패널 -->
+  <div class="side-col">
+    <div class="side-card">
+      <div class="side-title">✨ 주요 기능</div>
+      <div class="feature-item">
+        <span class="feature-icon">🗺️</span>
+        <span class="feature-text"><b>지도 자동 표시</b>카카오 지도에 장소 마커가 자동으로 찍혀요</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">⏱️</span>
+        <span class="feature-text"><b>실제 이동시간 계산</b>장소 간 도보·차량 이동시간을 정확히 알려드려요</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🔄</span>
+        <span class="feature-text"><b>장소 교체</b>마음에 안 드는 장소만 골라서 다시 추천받을 수 있어요</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">📍</span>
+        <span class="feature-text"><b>네이버 예약 연동</b>버튼 한 번으로 네이버 예약 페이지로 바로 이동해요</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🖨️</span>
+        <span class="feature-text"><b>PDF 저장</b>완성된 일정을 PDF로 저장하거나 인쇄할 수 있어요</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🔒</span>
+        <span class="feature-text"><b>안전한 키 관리</b>API 키는 내 기기에만 저장되고 탭을 닫으면 자동 삭제돼요</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-// 칩 선택 관리
-const chipSelections = { companion: null, age: null, gender: null, mood: [] };
+// ✅ API 키 관리 — 세션에만 저장
+let userApiKey = sessionStorage.getItem('gemini_key') || null;
 
+function showApiModal() {
+  document.getElementById('apiKeyInput').value = '';
+  document.getElementById('modalError').style.display = 'none';
+  document.getElementById('apiModal').classList.remove('hidden');
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) {
+    const err = document.getElementById('modalError');
+    err.textContent = 'API 키를 입력해주세요.';
+    err.style.display = 'block';
+    return;
+  }
+  userApiKey = key;
+  sessionStorage.setItem('gemini_key', key);
+  document.getElementById('apiModal').classList.add('hidden');
+  // ✅ 처음 키 입력 시 사용방법 팝업 표시
+  if (!sessionStorage.getItem('guide_shown')) {
+    sessionStorage.setItem('guide_shown', '1');
+    document.getElementById('guideModal').classList.remove('hidden');
+  }
+}
+
+function closeGuide() {
+  document.getElementById('guideModal').classList.add('hidden');
+}
+
+// 엔터키로 저장
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('apiKeyInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveApiKey();
+  });
+  // 이미 키 있으면 모달 숨김 (가이드는 안 띄움)
+  if (userApiKey) {
+    document.getElementById('apiModal').classList.add('hidden');
+  }
+});
+
+const chipSelections = { companion: null, age: null, gender: null, mood: [] };
 function toggleChip(el, group) {
   if (group === 'mood') {
     el.classList.toggle('active');
     const val = el.textContent.trim();
-    if (chipSelections.mood.includes(val)) {
-      chipSelections.mood = chipSelections.mood.filter(v => v !== val);
-    } else {
-      chipSelections.mood.push(val);
-    }
+    chipSelections.mood = chipSelections.mood.includes(val)
+      ? chipSelections.mood.filter(v => v !== val)
+      : [...chipSelections.mood, val];
   } else {
     const prev = document.querySelector(`#${group}Chips .chip.active`);
     if (prev) prev.classList.remove('active');
-    if (prev !== el) {
-      el.classList.add('active');
-      chipSelections[group] = el.textContent.trim();
-    } else {
-      chipSelections[group] = null;
-    }
+    if (prev !== el) { el.classList.add('active'); chipSelections[group] = el.textContent.trim(); }
+    else chipSelections[group] = null;
   }
 }
 
 const EMOJI_MAP = { "🍽️ 맛집/카페":"🍽️","🏛️ 관광지":"🏛️","🛍️ 쇼핑":"🛍️","🌿 자연":"🌿","🎭 문화":"🎭","📍 기타":"📍" };
 let myPlaces = [], kakaoMap = null, markers = [], infowindows = [];
+let currentSchedule = null;
+let placeCoords = []; // 장소 좌표 저장 (길찾기용)
 
 function esc(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 window.onload = function() {
   try {
     kakaoMap = new kakao.maps.Map(document.getElementById('kakaoMap'), {
-      center: new kakao.maps.LatLng(37.5665, 126.9780),
-      level: 5
+      center: new kakao.maps.LatLng(37.5665, 126.9780), level: 5
     });
     document.getElementById('mapNote').textContent = '📌 장소를 추가하면 지도에 마커가 표시됩니다';
   } catch(e) {
     document.getElementById('mapNote').textContent = '⚠️ 지도 로딩 실패 — 카카오 도메인 등록을 확인해주세요';
-    console.error(e);
   }
 };
 
@@ -260,7 +460,7 @@ function addPlace() {
 function removePlace(i) {
   myPlaces.splice(i, 1);
   markers.forEach(m => m.setMap(null));
-  markers = []; infowindows = [];
+  markers = []; infowindows = []; placeCoords = [];
   const city = document.getElementById('city').value.trim();
   myPlaces.forEach((p, idx) => geocodeAndMark(city ? `${city} ${p.name}` : p.name, p.name, idx + 1));
   renderPlaces();
@@ -270,10 +470,12 @@ function geocodeAndMark(query, displayName, order) {
   if (!kakaoMap) return;
   new kakao.maps.services.Places().keywordSearch(query, function (result, status) {
     if (status !== kakao.maps.services.Status.OK) {
-      showError(`"${displayName}" 위치를 찾지 못했습니다.`);
-      return;
+      showError(`"${displayName}" 위치를 찾지 못했습니다.`); return;
     }
     const pos = new kakao.maps.LatLng(result[0].y, result[0].x);
+    // 좌표 저장
+    placeCoords[order - 1] = { x: result[0].x, y: result[0].y, name: displayName };
+
     const marker = new kakao.maps.Marker({ position: pos, map: kakaoMap });
     const iw = new kakao.maps.InfoWindow({
       content: `<div style="padding:8px 12px;font-size:13px;font-weight:700;color:#3C1E1E;white-space:nowrap">${order}. ${esc(displayName)}</div>`
@@ -300,6 +502,38 @@ function renderPlaces() {
     </div>`).join('');
 }
 
+async function callAI(prompt) {
+  if (!userApiKey) { showApiModal(); throw new Error('API 키를 먼저 입력해주세요.'); }
+  const res = await fetch('/.netlify/functions/claude', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Gemini-Key': userApiKey   // ✅ 개인 키를 헤더로 전달
+    },
+    body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
+  });
+  if (!res.ok) throw new Error(`서버 오류: HTTP ${res.status}`);
+  const data = await res.json();
+  if (!data.text) throw new Error(data.error || '응답에 내용이 없습니다.');
+  const clean = String(data.text).replace(/```json|```/g, '').trim();
+  let result;
+  try { result = JSON.parse(clean); }
+  catch { const m = clean.match(/\{[\s\S]*\}/); if (!m) throw new Error('AI 응답 분석 실패'); result = JSON.parse(m[0]); }
+  return result;
+}
+
+// ✅ 카카오모빌리티 길찾기 (Netlify 함수 경유)
+async function getDirections(origin, destination) {
+  try {
+    const res = await fetch('/.netlify/functions/directions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ origin, destination })
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
 async function generateSchedule() {
   const city = document.getElementById('city').value.trim();
   const date = document.getElementById('date').value;
@@ -317,14 +551,19 @@ async function generateSchedule() {
   const gender = chipSelections.gender || '';
   const moods = chipSelections.mood.join(', ');
   const moodText = document.getElementById('moodText').value.trim();
+  const budgetLimit = document.getElementById('budgetLimit').value;
+  const transportLimit = document.getElementById('transportLimit').value;
 
   const contextParts = [
-    companion && `동행: ${companion}`,
-    age && `연령대: ${age}`,
-    gender && `성별: ${gender}`,
-    moods && `원하는 분위기: ${moods}`,
+    companion && `동행: ${companion}`, age && `연령대: ${age}`,
+    gender && `성별: ${gender}`, moods && `원하는 분위기: ${moods}`,
     moodText && `추가 요청: ${moodText}`,
   ].filter(Boolean).join(' / ');
+
+  const limits = [
+    budgetLimit && `총 예산은 반드시 ${Number(budgetLimit).toLocaleString()}원 이하`,
+    transportLimit && `장소 간 이동시간은 반드시 ${transportLimit}분 이하`,
+  ].filter(Boolean).join(', ');
 
   const prompt = `당신은 여행 전문가입니다. 아래 조건으로 하루 여행 일정을 JSON으로 만들어주세요.
 도시/지역: ${city}
@@ -335,43 +574,28 @@ ${contextParts ? `여행 컨텍스트: ${contextParts}` : ''}
 지시사항:
 1. 내가 지정한 장소는 반드시 포함 (방문희망시간이 있으면 그 시간에 정확히 배치)
 2. 동선을 고려해 이동 거리 최소화
-3. 2~3곳 추가 장소 추천 (식사, 카페, 숨은 명소 등)
-4. 각 장소마다 예상 소요시간, 이동수단, 꿀팁 포함
+3. 2~3곳 추가 장소 추천
+4. 각 장소마다 예상 소요시간, 이동수단, 꿀팁, 예상 비용 포함
 5. 총 예산 추정
-반드시 JSON만 출력 (다른 텍스트, 마크다운 없이):
-{"title":"","summary":"","totalBudget":"","highlights":[],"places":[{"order":1,"time":"","name":"","category":"","duration":"","transport":"","tip":"","isRecommended":false,"recommendReason":""}]}`;
+${limits ? `6. 제한사항: ${limits}` : ''}
+반드시 JSON만 출력:
+{"title":"","summary":"","totalBudget":"","highlights":[],"places":[{"order":1,"time":"","name":"","category":"","duration":"","transport":"","tip":"","estimatedCost":"","isRecommended":false,"recommendReason":""}]}`;
 
   try {
-    // ✅ Netlify 함수 경유 — CORS 우회
-    const res = await fetch('/.netlify/functions/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
-    });
+    const schedule = await callAI(prompt);
+    if (!schedule.places || !Array.isArray(schedule.places)) throw new Error('일정 데이터 형식 오류');
+    currentSchedule = schedule;
+    renderResult(schedule, []);
 
-    if (!res.ok) throw new Error(`서버 오류: HTTP ${res.status}`);
-
-    const data = await res.json();
-    if (!data.text) throw new Error(data.error || '응답에 내용이 없습니다.');
-
-    const clean = String(data.text).replace(/```json|```/g, '').trim();
-    let schedule;
-    try {
-      schedule = JSON.parse(clean);
-    } catch {
-      const match = clean.match(/\{[\s\S]*\}/);
-      if (!match) throw new Error('AI 응답을 분석할 수 없습니다. 다시 시도해주세요.');
-      schedule = JSON.parse(match[0]);
-    }
-
-    if (!schedule.places || !Array.isArray(schedule.places)) {
-      throw new Error('일정 데이터 형식 오류입니다. 다시 시도해주세요.');
-    }
-
-    renderResult(schedule);
+    // AI 추천 장소 마커
     schedule.places.forEach((p, i) => {
       if (p.isRecommended) geocodeAndMark(city ? `${city} ${p.name}` : p.name, p.name, i + 1);
     });
+
+    // ✅ 길찾기 API로 실제 이동시간 계산 (비동기)
+    btn.innerHTML = '<span>🗺️</span> 이동시간 계산 중...';
+    const transitData = await fetchAllDirections(schedule.places, city);
+    renderResult(schedule, transitData);
 
   } catch (e) {
     showError(e.message);
@@ -381,20 +605,73 @@ ${contextParts ? `여행 컨텍스트: ${contextParts}` : ''}
   }
 }
 
-function renderResult(schedule) {
+// 모든 장소 간 이동시간 계산
+async function fetchAllDirections(places, city) {
+  const coords = [];
+  // 장소 좌표 수집
+  for (const p of places) {
+    const coord = await new Promise(resolve => {
+      new kakao.maps.services.Places().keywordSearch(
+        city ? `${city} ${p.name}` : p.name,
+        (result, status) => {
+          if (status === kakao.maps.services.Status.OK) {
+            resolve({ x: result[0].x, y: result[0].y });
+          } else resolve(null);
+        }
+      );
+    });
+    coords.push(coord);
+  }
+
+  // 연속 장소 간 이동시간 계산
+  const transitData = [];
+  for (let i = 0; i < coords.length - 1; i++) {
+    if (coords[i] && coords[i+1]) {
+      const result = await getDirections(coords[i], coords[i+1]);
+      transitData.push(result);
+    } else {
+      transitData.push(null);
+    }
+  }
+  return transitData;
+}
+
+// ✅ 4번: 장소 교체
+async function refreshPlace(idx) {
+  const btn = document.getElementById(`refresh-btn-${idx}`);
+  if (!btn) return;
+  btn.disabled = true; btn.textContent = '교체 중...';
+  const city = document.getElementById('city').value.trim();
+  const place = currentSchedule.places[idx];
+  const others = currentSchedule.places.map(p => p.name).filter((_, i) => i !== idx).join(', ');
+  const prompt = `여행 전문가로서, 아래 장소를 대체할 다른 장소 하나만 추천해주세요.
+도시: ${city}, 시간대: ${place.time}, 카테고리: ${place.category}
+현재 다른 장소들: ${others}
+조건: 동선 비슷하고 같은 카테고리의 다른 장소
+반드시 JSON만 출력:
+{"name":"","tip":"","estimatedCost":"","recommendReason":""}`;
+  try {
+    const newPlace = await callAI(prompt);
+    currentSchedule.places[idx] = { ...place, name: newPlace.name, tip: newPlace.tip, estimatedCost: newPlace.estimatedCost, recommendReason: newPlace.recommendReason, isRecommended: true };
+    const transitData = await fetchAllDirections(currentSchedule.places, city);
+    renderResult(currentSchedule, transitData);
+  } catch { btn.disabled = false; btn.textContent = '🔄 교체'; alert('교체 실패. 다시 시도해주세요.'); }
+}
+
+function renderResult(schedule, transitData) {
   document.getElementById('inputSection').style.display = 'none';
   const el = document.getElementById('resultSection');
   el.style.display = 'block';
   const places = schedule.places || [];
+
   el.innerHTML = `
     <div class="result-header">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-        <div style="flex:1">
-          <div class="result-title">${esc(schedule.title)}</div>
-          <div class="result-summary">${esc(schedule.summary)}</div>
-          <div class="result-tags">${(schedule.highlights||[]).map(h=>`<span class="tag">✦ ${esc(h)}</span>`).join('')}</div>
-        </div>
-        <button onclick="goBack()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(254,229,0,0.3);color:var(--kakao);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:12px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap">← 다시 계획</button>
+      <div class="result-title">${esc(schedule.title)}</div>
+      <div class="result-summary">${esc(schedule.summary)}</div>
+      <div class="result-tags">${(schedule.highlights||[]).map(h=>`<span class="tag">✦ ${esc(h)}</span>`).join('')}</div>
+      <div class="result-actions" style="margin-top:12px;">
+        <button class="btn-back" onclick="goBack()">← 다시 계획</button>
+        <button class="btn-pdf" onclick="window.print()">🖨️ PDF 저장</button>
       </div>
     </div>
     <div class="budget-bar">
@@ -402,7 +679,17 @@ function renderResult(schedule) {
       <div class="budget-value">${esc(schedule.totalBudget)}</div>
     </div>
     <div class="timeline">
-      ${places.map((p, i) => `
+      ${places.map((p, i) => {
+        const transit = transitData && transitData[i-1];
+        const transitHtml = (i > 0 && transit) ? `
+          <div style="margin-left:60px;margin-bottom:4px;">
+            <div class="transit-info">
+              ${transit.walk ? `🚶 도보 ${transit.walk.duration}분 (${transit.walk.distance}km)` : ''}
+              ${transit.car ? ` · 🚗 차량 ${transit.car.duration}분` : ''}
+            </div>
+          </div>` : '';
+        return `
+        ${transitHtml}
         <div class="timeline-item">
           <div class="timeline-left">
             <div class="timeline-dot ${p.isRecommended?'dot-rec':'dot-mine'}" onclick="focusMarker(${i})">${i+1}</div>
@@ -413,17 +700,18 @@ function renderResult(schedule) {
             <div class="tc-name">📍 ${esc(p.name)}${p.isRecommended?'<span class="rec-badge">AI 추천</span>':''}</div>
             <div class="tc-tip">${esc(p.tip)}</div>
             ${p.isRecommended&&p.recommendReason?`<div class="rec-reason">💡 ${esc(p.recommendReason)}</div>`:''}
-            <div class="tc-tags" style="justify-content:space-between;align-items:center;">
-              <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <span class="tc-tag">⏱ ${esc(p.duration)}</span>
-                ${p.transport?`<span class="tc-tag">🚶 ${esc(p.transport)}</span>`:''}
-              </div>
-              <a class="btn-naver" href="https://map.naver.com/v5/search/${encodeURIComponent(p.name)}" target="_blank" rel="noopener">
-                N 예약
-              </a>
+            <div class="tc-tags">
+              <span class="tc-tag">⏱ ${esc(p.duration)}</span>
+              ${p.transport?`<span class="tc-tag">🚌 ${esc(p.transport)}</span>`:''}
+              ${p.estimatedCost?`<span class="tc-tag">💸 ${esc(p.estimatedCost)}</span>`:''}
+            </div>
+            <div class="tc-btns">
+              <button class="btn-refresh" id="refresh-btn-${i}" onclick="event.stopPropagation();refreshPlace(${i})">🔄 장소 교체</button>
+              <a class="btn-naver" href="https://map.naver.com/v5/search/${encodeURIComponent(p.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">N 예약</a>
             </div>
           </div>
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>`;
 }
 
