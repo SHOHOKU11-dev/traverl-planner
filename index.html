@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>하루 여행 플래너</title>
+<title>약속 플래너</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1bf23e4e4bf17407ee3a0c0680628d9b&libraries=services,clusterer"></script>
 <style>
@@ -88,20 +88,8 @@
   .chip.active { background: var(--kakao-dark); border-color: var(--kakao-dark); color: var(--kakao); }
   .limit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .error-box { background: #fdf0ef; border: 1px solid #f5c6c2; border-radius: 10px; padding: 10px 14px; color: var(--danger); font-size: 13px; margin-bottom: 14px; }
-  /* 사용방법 팝업 */
-  .guide-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 150; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .guide-overlay.hidden { display: none; }
-  .guide-box { background: var(--surface); border-radius: 16px; padding: 24px; width: 100%; max-width: 380px; box-shadow: var(--shadow-lg); }
-  .guide-title { font-size: 16px; font-weight: 900; color: var(--kakao-dark); margin-bottom: 4px; }
-  .guide-subtitle { font-size: 11px; color: var(--muted); margin-bottom: 16px; }
-  .guide-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-  .guide-step { display: flex; gap: 10px; align-items: flex-start; }
-  .guide-num { width: 22px; height: 22px; background: var(--kakao-dark); color: var(--kakao); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; flex-shrink: 0; margin-top: 1px; }
-  .guide-text { font-size: 12px; color: var(--text); line-height: 1.6; }
-  .guide-text b { color: var(--kakao-dark); }
-  .btn-guide-close { width: 100%; padding: 12px; background: var(--kakao-dark); border: none; border-radius: 10px; color: var(--kakao); font-size: 14px; font-weight: 900; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
 
-  /* API 키 입력 모달 */
+  /* ✅ 통합 모달 스타일 */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .modal-overlay.hidden { display: none; }
   .modal-box { background: var(--surface); border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); }
@@ -114,6 +102,11 @@
   .modal-error { font-size: 11px; color: var(--danger); margin-bottom: 10px; display: none; }
   .btn-modal { width: 100%; padding: 13px; background: var(--kakao-dark); border: none; border-radius: 10px; color: var(--kakao); font-size: 14px; font-weight: 900; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; }
   .btn-key-change { background: none; border: none; color: var(--kakao-dark); font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: underline; margin-left: auto; font-family: 'Noto Sans KR', sans-serif; }
+  .guide-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .guide-step { display: flex; gap: 10px; align-items: flex-start; }
+  .guide-num { width: 22px; height: 22px; background: var(--kakao-dark); color: var(--kakao); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; flex-shrink: 0; margin-top: 2px; }
+  .guide-text { font-size: 12px; color: var(--text); line-height: 1.6; }
+  .guide-text b { color: var(--kakao-dark); }
 
   @media print {
     .header, .map-wrap, .result-actions, .btn-naver, .btn-refresh, .timeline-dot, .tc-btns { display: none !important; }
@@ -127,7 +120,7 @@
 </head>
 <body>
 
-<!-- API 키 입력 모달 -->
+<!-- ✅ API 키 입력 모달 -->
 <div class="modal-overlay" id="apiModal">
   <div class="modal-box">
     <div class="modal-title">🔑 Gemini API 키 입력</div>
@@ -145,64 +138,34 @@
   </div>
 </div>
 
-<!-- 사용법 안내 모달 (API 키 입력 후 표시) -->
+<!-- ✅ 사용방법 모달 — id 중복 완전 제거, guideModal 하나로 통일 -->
 <div class="modal-overlay hidden" id="guideModal">
   <div class="modal-box">
-    <div class="modal-title">📖 사용 방법</div>
-    <div class="modal-desc" style="margin-bottom:18px;">
-      <div style="display:flex;gap:10px;margin-bottom:10px;">
-        <span style="font-weight:900;color:var(--kakao-dark)">1</span>
-        <span>도시, 날짜, 동행자, 분위기를 설정해주세요</span>
-      </div>
-      <div style="display:flex;gap:10px;margin-bottom:10px;">
-        <span style="font-weight:900;color:var(--kakao-dark)">2</span>
-        <span>가고 싶은 장소를 추가하세요 (방문 희망 시간도 지정 가능)</span>
-      </div>
-      <div style="display:flex;gap:10px;margin-bottom:10px;">
-        <span style="font-weight:900;color:var(--kakao-dark)">3</span>
-        <span>AI 여행 일정 생성하기 버튼을 클릭하세요</span>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <span style="font-weight:900;color:var(--kakao-dark)">4</span>
-        <span>완성된 일정을 확인하고 필요하면 장소를 교체하거나 PDF로 저장하세요</span>
-      </div>
-    </div>
-    <button class="btn-modal" onclick="closeGuideModal()">시작하기</button>
-  </div>
-</div>
-
-<!-- 사용방법 팝업 -->
-<div class="guide-overlay hidden" id="guideModal">
-  <div class="guide-box">
-    <div class="guide-title">📋 사용 방법</div>
-    <div class="guide-subtitle">처음 사용하시는 분을 위한 안내입니다</div>
+    <div class="modal-title">📋 사용 방법</div>
+    <div class="modal-desc">처음 사용하시는 분을 위한 안내입니다</div>
     <div class="guide-steps">
       <div class="guide-step">
         <div class="guide-num">1</div>
-        <div class="guide-text"><b>Gemini API 키 발급</b><br><a href="https://aistudio.google.com/api-keys" target="_blank" style="color:var(--kakao-dark);">aistudio.google.com</a>에서 무료로 발급받아 입력해주세요</div>
-      </div>
-      <div class="guide-step">
-        <div class="guide-num">2</div>
         <div class="guide-text"><b>기본 정보 입력</b><br>도시, 날짜, 출발 시간을 설정해주세요</div>
       </div>
       <div class="guide-step">
-        <div class="guide-num">3</div>
+        <div class="guide-num">2</div>
         <div class="guide-text"><b>동행자 & 분위기 설정</b><br>누구와, 어떤 느낌의 여행인지 선택해주세요</div>
       </div>
       <div class="guide-step">
-        <div class="guide-num">4</div>
+        <div class="guide-num">3</div>
         <div class="guide-text"><b>장소 추가</b><br>가고 싶은 장소를 추가해주세요. 방문 희망 시간도 지정할 수 있어요</div>
       </div>
       <div class="guide-step">
-        <div class="guide-num">5</div>
+        <div class="guide-num">4</div>
         <div class="guide-text"><b>AI 일정 생성</b><br>버튼을 누르면 동선 최적화된 하루 일정이 완성돼요</div>
       </div>
       <div class="guide-step">
-        <div class="guide-num">6</div>
-        <div class="guide-text"><b>일정 활용</b><br>마음에 안 드는 장소는 🔄 교체, N 예약으로 바로 예약, 🖨️ PDF로 저장할 수 있어요</div>
+        <div class="guide-num">5</div>
+        <div class="guide-text"><b>일정 활용</b><br>🔄 장소 교체, N 네이버 예약, 🖨️ PDF 저장을 활용해보세요</div>
       </div>
     </div>
-    <button class="btn-guide-close" onclick="closeGuide()">시작하기 🚀</button>
+    <button class="btn-modal" onclick="closeGuide()">시작하기 🚀</button>
   </div>
 </div>
 
@@ -273,7 +236,7 @@
     </div>
 
     <div class="card">
-      <div class="card-title">✨ 어떤 느낌의 만남을 원하세요?</div>
+      <div class="card-title">✨ 어떤 느낌의 여행을 원하세요?</div>
       <div class="chip-group" style="margin-bottom:10px;" id="moodChips">
         <button class="chip" onclick="toggleChip(this,'mood')">🎉 신나게</button>
         <button class="chip" onclick="toggleChip(this,'mood')">☕ 조용하게</button>
@@ -328,42 +291,10 @@
   </div>
 
   <div id="resultSection" style="display:none"></div>
-  </div>
-
-  <!-- 주요 기능 사이드 패널 -->
-  <div class="side-col">
-    <div class="side-card">
-      <div class="side-title">✨ 주요 기능</div>
-      <div class="feature-item">
-        <span class="feature-icon">🗺️</span>
-        <span class="feature-text"><b>지도 자동 표시</b>카카오 지도에 장소 마커가 자동으로 찍혀요</span>
-      </div>
-      <div class="feature-item">
-        <span class="feature-icon">⏱️</span>
-        <span class="feature-text"><b>실제 이동시간 계산</b>장소 간 도보·차량 이동시간을 정확히 알려드려요</span>
-      </div>
-      <div class="feature-item">
-        <span class="feature-icon">🔄</span>
-        <span class="feature-text"><b>장소 교체</b>마음에 안 드는 장소만 골라서 다시 추천받을 수 있어요</span>
-      </div>
-      <div class="feature-item">
-        <span class="feature-icon">📍</span>
-        <span class="feature-text"><b>네이버 예약 연동</b>버튼 한 번으로 네이버 예약 페이지로 바로 이동해요</span>
-      </div>
-      <div class="feature-item">
-        <span class="feature-icon">🖨️</span>
-        <span class="feature-text"><b>PDF 저장</b>완성된 일정을 PDF로 저장하거나 인쇄할 수 있어요</span>
-      </div>
-      <div class="feature-item">
-        <span class="feature-icon">🔒</span>
-        <span class="feature-text"><b>안전한 키 관리</b>API 키는 내 기기에만 저장되고 탭을 닫으면 자동 삭제돼요</span>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
-// ✅ API 키 관리 — 세션에만 저장
+// ✅ API 키 관리
 let userApiKey = sessionStorage.getItem('gemini_key') || null;
 
 function showApiModal() {
@@ -383,23 +314,23 @@ function saveApiKey() {
   userApiKey = key;
   sessionStorage.setItem('gemini_key', key);
   document.getElementById('apiModal').classList.add('hidden');
-  // ✅ 처음 키 입력 시 사용방법 팝업 표시
+
+  // ✅ 처음 키 입력 시에만 가이드 표시
   if (!sessionStorage.getItem('guide_shown')) {
     sessionStorage.setItem('guide_shown', '1');
     document.getElementById('guideModal').classList.remove('hidden');
   }
 }
 
+// ✅ 가이드 닫기 — 함수 하나로 통일 (closeGuide만 사용)
 function closeGuide() {
   document.getElementById('guideModal').classList.add('hidden');
 }
 
-// 엔터키로 저장
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('apiKeyInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') saveApiKey();
   });
-  // 이미 키 있으면 모달 숨김 (가이드는 안 띄움)
   if (userApiKey) {
     document.getElementById('apiModal').classList.add('hidden');
   }
@@ -424,7 +355,7 @@ function toggleChip(el, group) {
 const EMOJI_MAP = { "🍽️ 맛집/카페":"🍽️","🏛️ 관광지":"🏛️","🛍️ 쇼핑":"🛍️","🌿 자연":"🌿","🎭 문화":"🎭","📍 기타":"📍" };
 let myPlaces = [], kakaoMap = null, markers = [], infowindows = [];
 let currentSchedule = null;
-let placeCoords = []; // 장소 좌표 저장 (길찾기용)
+let placeCoords = [];
 
 function esc(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -473,9 +404,7 @@ function geocodeAndMark(query, displayName, order) {
       showError(`"${displayName}" 위치를 찾지 못했습니다.`); return;
     }
     const pos = new kakao.maps.LatLng(result[0].y, result[0].x);
-    // 좌표 저장
     placeCoords[order - 1] = { x: result[0].x, y: result[0].y, name: displayName };
-
     const marker = new kakao.maps.Marker({ position: pos, map: kakaoMap });
     const iw = new kakao.maps.InfoWindow({
       content: `<div style="padding:8px 12px;font-size:13px;font-weight:700;color:#3C1E1E;white-space:nowrap">${order}. ${esc(displayName)}</div>`
@@ -506,10 +435,7 @@ async function callAI(prompt) {
   if (!userApiKey) { showApiModal(); throw new Error('API 키를 먼저 입력해주세요.'); }
   const res = await fetch('/.netlify/functions/claude', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Gemini-Key': userApiKey   // ✅ 개인 키를 헤더로 전달
-    },
+    headers: { 'Content-Type': 'application/json', 'X-Gemini-Key': userApiKey },
     body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
   });
   if (!res.ok) throw new Error(`서버 오류: HTTP ${res.status}`);
@@ -522,7 +448,6 @@ async function callAI(prompt) {
   return result;
 }
 
-// ✅ 카카오모빌리티 길찾기 (Netlify 함수 경유)
 async function getDirections(origin, destination) {
   try {
     const res = await fetch('/.netlify/functions/directions', {
@@ -587,12 +512,10 @@ ${limits ? `6. 제한사항: ${limits}` : ''}
     currentSchedule = schedule;
     renderResult(schedule, []);
 
-    // AI 추천 장소 마커
     schedule.places.forEach((p, i) => {
       if (p.isRecommended) geocodeAndMark(city ? `${city} ${p.name}` : p.name, p.name, i + 1);
     });
 
-    // ✅ 길찾기 API로 실제 이동시간 계산 (비동기)
     btn.innerHTML = '<span>🗺️</span> 이동시간 계산 중...';
     const transitData = await fetchAllDirections(schedule.places, city);
     renderResult(schedule, transitData);
@@ -605,25 +528,20 @@ ${limits ? `6. 제한사항: ${limits}` : ''}
   }
 }
 
-// 모든 장소 간 이동시간 계산
 async function fetchAllDirections(places, city) {
   const coords = [];
-  // 장소 좌표 수집
   for (const p of places) {
     const coord = await new Promise(resolve => {
       new kakao.maps.services.Places().keywordSearch(
         city ? `${city} ${p.name}` : p.name,
         (result, status) => {
-          if (status === kakao.maps.services.Status.OK) {
-            resolve({ x: result[0].x, y: result[0].y });
-          } else resolve(null);
+          if (status === kakao.maps.services.Status.OK) resolve({ x: result[0].x, y: result[0].y });
+          else resolve(null);
         }
       );
     });
     coords.push(coord);
   }
-
-  // 연속 장소 간 이동시간 계산
   const transitData = [];
   for (let i = 0; i < coords.length - 1; i++) {
     if (coords[i] && coords[i+1]) {
@@ -636,7 +554,6 @@ async function fetchAllDirections(places, city) {
   return transitData;
 }
 
-// ✅ 4번: 장소 교체
 async function refreshPlace(idx) {
   const btn = document.getElementById(`refresh-btn-${idx}`);
   if (!btn) return;
