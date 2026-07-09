@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>약속 플래너</title>
+<title>일정 플래너</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1bf23e4e4bf17407ee3a0c0680628d9b&libraries=services,clusterer"></script>
 <style>
@@ -747,14 +747,15 @@ async function generateSchedule() {
 날짜: ${date||'미정'}
 출발 시간: ${startTime}
 귀가 시간: ${returnTime} (모든 일정은 반드시 이 시간 이전에 종료)
-이동수단: ${transportStr} (이 수단만 사용할 것. 목록에 없는 수단은 절대 추천 금지)
+허용된 이동수단 목록: [${transportStr}]
+⚠️ 중요: transport 필드에는 반드시 위 목록에 있는 수단만 기재할 것. 목록에 없는 수단(예: 자차, 택시, 버스 등)은 절대 사용 금지. 자차가 목록에 없으면 transport 필드에 "자차" 또는 "차량"을 절대 쓰지 말 것.
 ${contextParts?`여행 컨텍스트: ${contextParts}`:''}
 내가 꼭 가고 싶은 장소: ${myPlaces.map(p=>p.name+'('+p.category+(p.time?', 방문희망시간:'+p.time:'')+')').join(', ')}
 지시사항:
 1. 내가 지정한 장소는 반드시 포함 (방문희망시간이 있으면 그 시간에 정확히 배치)
 2. 동선을 고려해 이동 거리 최소화
 3. 2~3곳 추가 장소 추천
-4. 각 장소 transport 필드에는 위 이동수단 목록 중에서만 선택해서 기재
+4. transport 필드: 반드시 [${transportStr}] 중 하나만 사용. 다른 값 절대 금지
 5. 각 장소마다 예상 소요시간, 꿀팁, 예상 비용 포함
 6. 총 예산 추정
 7. 귀가 시간(${returnTime}) 이전에 반드시 일정 종료
@@ -766,6 +767,16 @@ ${limits?`8. 제한사항: ${limits}`:''}
     lastSearchSources = [];
     const schedule=await callAI(prompt, useSearch);
     if (!schedule.places||!Array.isArray(schedule.places)) throw new Error('일정 데이터 형식 오류');
+
+    // ✅ 이동수단 후처리 필터 — AI가 무시해도 강제 교체
+    const fallback = selectedTransports[0]; // 기본값: 첫 번째 선택 수단
+    schedule.places = schedule.places.map(p => {
+      const t = p.transport || '';
+      const allowed = selectedTransports.some(s => t.includes(s));
+      if (!allowed && t !== '') p.transport = fallback;
+      return p;
+    });
+
     currentSchedule=schedule; renderResult(schedule,[]);
     schedule.places.forEach((p,i)=>{ if(p.isRecommended) geocodeAndMark(city?`${city} ${p.name}`:p.name, p.name, i+1); });
     btn.innerHTML='<span>🗺️</span> 이동시간 계산 중...';
