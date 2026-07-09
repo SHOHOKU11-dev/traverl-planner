@@ -17,14 +17,29 @@ exports.handler = async function (event) {
   try {
     const body = JSON.parse(event.body || "{}");
     const prompt = body.messages?.[0]?.content;
+    const useSearch = body.useSearch || false; // 검색 모드 여부
+
     if (!prompt) {
       return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: "prompt가 없습니다." }) };
     }
 
-    // ✅ 사용자 개인 키를 헤더에서 받음
     const apiKey = event.headers["x-gemini-key"] || event.headers["X-Gemini-Key"];
     if (!apiKey) {
       return { statusCode: 401, headers: corsHeaders, body: JSON.stringify({ error: "API 키가 없습니다." }) };
+    }
+
+    // ✅ 구글 검색 연동 여부에 따라 요청 구조 분기
+    const requestBody = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: useSearch ? 0.5 : 0.3,
+        maxOutputTokens: 2000,
+      },
+    };
+
+    // ✅ 검색 모드일 때 Google Search 도구 추가
+    if (useSearch) {
+      requestBody.tools = [{ googleSearch: {} }];
     }
 
     const response = await fetch(
@@ -32,10 +47,7 @@ exports.handler = async function (event) {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 2000 },
-        }),
+        body: JSON.stringify(requestBody),
       }
     );
 
@@ -57,7 +69,18 @@ exports.handler = async function (event) {
       return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: "Gemini 응답이 비었습니다." }) };
     }
 
-    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify({ text }) };
+    // ✅ 검색 출처 정보도 함께 반환
+    const groundingMetadata = data.candidates?.[0]?.groundingMetadata;
+    const sources = groundingMetadata?.groundingChunks?.map(chunk => ({
+      title: chunk.web?.title || '',
+      url: chunk.web?.uri || '',
+    })) || [];
+
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({ text, sources }),
+    };
 
   } catch (err) {
     return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: err.message }) };
