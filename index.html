@@ -72,6 +72,12 @@
   .weather-hour-emoji { font-size: 16px; }
   .weather-hour-temp { font-size: 12px; font-weight: 700; margin-top: 2px; }
   .weather-error { font-size: 11px; color: rgba(255,255,255,0.7); text-align: center; padding: 8px; }
+  .weather-ratio-badge { background: rgba(255,255,255,0.12); border-radius: 10px; padding: 8px 12px; min-width: 160px; }
+  .ratio-label { font-size: 10px; color: rgba(255,255,255,0.75); margin-bottom: 5px; font-weight: 600; }
+  .ratio-bar { display: flex; border-radius: 6px; overflow: hidden; height: 22px; margin-bottom: 5px; }
+  .ratio-outdoor { background: rgba(255,255,255,0.35); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; white-space: nowrap; padding: 0 4px; min-width: 40px; transition: width 0.4s; }
+  .ratio-indoor { background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.9); white-space: nowrap; padding: 0 4px; min-width: 40px; transition: width 0.4s; }
+  .ratio-desc { font-size: 10px; color: rgba(255,255,255,0.85); line-height: 1.4; }
 
   /* ✅ 최신 동향 검색 토글 */
   .search-toggle { display: flex; align-items: center; gap: 10px; background: var(--primary-pale); border: 1.5px solid var(--primary-light); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; cursor: pointer; }
@@ -463,13 +469,27 @@ async function fetchWeather(city) {
     const data = await res.json();
     if (!res.ok) { content.innerHTML = `<div class="weather-error">⚠️ ${data.error || '날씨를 불러오지 못했습니다'}</div>`; return; }
 
+    // ✅ 날씨 데이터 전역 저장
+    currentWeatherData = data;
+
+    // ✅ 날씨 기반 실내/실외 비중 계산
+    const ratio = getIndoorOutdoorRatio(data);
+
     content.innerHTML = `
       <div class="weather-main">
         <div class="weather-emoji">${data.emoji}</div>
-        <div>
+        <div style="flex:1">
           <div class="weather-temp">${data.temp}°C</div>
           <div class="weather-city">${data.city}</div>
           <div class="weather-desc">${data.description}</div>
+        </div>
+        <div class="weather-ratio-badge">
+          <div class="ratio-label">AI 추천 비중</div>
+          <div class="ratio-bar">
+            <div class="ratio-outdoor" style="width:${ratio.outdoor}%">🌤️ ${ratio.outdoor}%</div>
+            <div class="ratio-indoor" style="width:${ratio.indoor}%">🏠 ${ratio.indoor}%</div>
+          </div>
+          <div class="ratio-desc">${ratio.desc}</div>
         </div>
       </div>
       <div class="weather-details">
@@ -492,6 +512,49 @@ async function fetchWeather(city) {
   } catch(e) {
     content.innerHTML = '<div class="weather-error">⚠️ 날씨 서버 연결 실패</div>';
   }
+}
+
+// ✅ 날씨 코드 기반 실내/실외 비중 계산
+function getIndoorOutdoorRatio(data) {
+  const id = data.weatherId || 800;
+  const temp = data.temp || 20;
+  const wind = data.wind || 0;
+
+  let outdoor = 70; // 기본값
+
+  // 날씨 코드별 조정
+  if (id >= 200 && id < 300) { outdoor = 10; } // 뇌우
+  else if (id >= 300 && id < 400) { outdoor = 30; } // 이슬비
+  else if (id >= 500 && id < 600) { outdoor = 20; } // 비
+  else if (id >= 600 && id < 700) { outdoor = 15; } // 눈
+  else if (id >= 700 && id < 800) { outdoor = 40; } // 안개/황사
+  else if (id === 800) { outdoor = 80; } // 맑음
+  else if (id === 801) { outdoor = 75; } // 약간 흐림
+  else if (id === 802) { outdoor = 65; } // 구름 조금
+  else if (id >= 803) { outdoor = 50; } // 흐림
+
+  // 기온 보정
+  if (temp <= 0) outdoor = Math.min(outdoor, 30);
+  else if (temp <= 5) outdoor = Math.min(outdoor, 45);
+  else if (temp >= 35) outdoor = Math.min(outdoor, 40);
+  else if (temp >= 30) outdoor = Math.min(outdoor, 55);
+
+  // 바람 보정
+  if (wind >= 50) outdoor = Math.min(outdoor, 25);
+  else if (wind >= 30) outdoor = Math.min(outdoor, 40);
+
+  outdoor = Math.round(outdoor / 10) * 10; // 10 단위로 반올림
+  const indoor = 100 - outdoor;
+
+  // 설명 문구
+  let desc = '';
+  if (outdoor >= 75) desc = '야외 활동하기 좋은 날씨예요!';
+  else if (outdoor >= 60) desc = '실외 위주로 구성하되 실내도 포함해요';
+  else if (outdoor >= 40) desc = '실내외 균형있게 구성해요';
+  else if (outdoor >= 20) desc = '실내 위주로 구성하는 걸 추천해요';
+  else desc = '오늘은 실내 활동을 적극 추천해요';
+
+  return { outdoor, indoor, desc };
 }
 
 function toggleTransport(el) {
@@ -540,6 +603,7 @@ function toggleChip(el, group) {
 
 const EMOJI_MAP = {"🍽️ 맛집/카페":"🍽️","🏛️ 관광지":"🏛️","🛍️ 쇼핑":"🛍️","🌿 자연":"🌿","🎭 문화":"🎭","📍 기타":"📍"};
 let myPlaces=[], kakaoMap=null, markers=[], infowindows=[], currentSchedule=null;
+let currentWeatherData = null; // ✅ 날씨 데이터 전역 저장
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -668,8 +732,18 @@ async function generateSchedule() {
     ? `\n구글 검색을 활용해서 ${city}의 최신 핫플레이스, 현재 진행 중인 축제·이벤트, 요즘 뜨는 맛집 트렌드를 반영해주세요.`
     : '';
 
+  // ✅ 날씨 기반 실내/실외 비중 프롬프트
+  let weatherInstruction = '';
+  if (currentWeatherData) {
+    const ratio = getIndoorOutdoorRatio(currentWeatherData);
+    weatherInstruction = `
+현재 날씨: ${currentWeatherData.emoji} ${currentWeatherData.description}, 기온 ${currentWeatherData.temp}°C, 바람 ${currentWeatherData.wind}km/h
+날씨 기반 추천 장소 비중: 실외 ${ratio.outdoor}% / 실내 ${ratio.indoor}%
+→ 위 비중에 맞게 실외 장소(공원, 거리, 야외 명소 등)와 실내 장소(카페, 미술관, 쇼핑몰 등)를 적절히 섞어서 구성해주세요.`;
+  }
+
   const prompt=`당신은 여행 전문가입니다. 아래 조건으로 하루 여행 일정을 JSON으로 만들어주세요.${searchInstruction}
-도시/지역: ${city}
+도시/지역: ${city}${weatherInstruction}
 날짜: ${date||'미정'}
 출발 시간: ${startTime}
 귀가 시간: ${returnTime} (모든 일정은 반드시 이 시간 이전에 종료)
