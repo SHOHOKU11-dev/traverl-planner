@@ -56,6 +56,7 @@ exports.handler = async function (event) {
 
     const result = {
       city: current.name,
+      weatherId: current.weather[0].id, // ✅ 실내외 비중 계산용
       temp: Math.round(current.main.temp),
       feels_like: Math.round(current.main.feels_like),
       temp_min: Math.round(current.main.temp_min),
