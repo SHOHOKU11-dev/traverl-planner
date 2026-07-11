@@ -15,9 +15,9 @@ exports.handler = async function (event) {
   }
 
   try {
-    const { city } = JSON.parse(event.body || "{}");
-    if (!city) {
-      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: "city 파라미터가 없습니다." }) };
+    const { city, lat, lon } = JSON.parse(event.body || "{}");
+    if (!city && (lat === undefined || lon === undefined)) {
+      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: "city 또는 좌표(lat, lon)가 필요합니다." }) };
     }
 
     const API_KEY = process.env.OPENWEATHER_API_KEY;
@@ -25,18 +25,23 @@ exports.handler = async function (event) {
       return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: "OPENWEATHER_API_KEY 환경변수가 없습니다." }) };
     }
 
+    // ✅ 좌표가 있으면 좌표 우선 사용, 없으면 도시명 사용
+    const weatherQuery = (lat !== undefined && lon !== undefined)
+      ? `lat=${lat}&lon=${lon}`
+      : `q=${encodeURIComponent(city)}`;
+
     // 현재 날씨 조회
     const currentRes = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=kr`
+      `https://api.openweathermap.org/data/2.5/weather?${weatherQuery}&appid=${API_KEY}&units=metric&lang=kr`
     );
     if (!currentRes.ok) {
-      return { statusCode: 404, headers: corsHeaders, body: JSON.stringify({ error: `"${city}" 날씨를 찾지 못했습니다.` }) };
+      return { statusCode: 404, headers: corsHeaders, body: JSON.stringify({ error: `"${city || '해당 위치'}" 날씨를 찾지 못했습니다.` }) };
     }
     const current = await currentRes.json();
 
-    // 5일 예보 (3시간 단위) — 오늘 데이터만 필터링
+    // 5일 예보 (3시간 단위)
     const forecastRes = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=kr&cnt=8`
+      `https://api.openweathermap.org/data/2.5/forecast?${weatherQuery}&appid=${API_KEY}&units=metric&lang=kr&cnt=8`
     );
     const forecast = await forecastRes.json();
 
