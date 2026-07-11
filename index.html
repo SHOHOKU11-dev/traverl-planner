@@ -445,26 +445,44 @@ document.addEventListener('DOMContentLoaded', function() {
   updateMapChips();
 });
 
-// ✅ 도시 입력 시 날씨 자동 조회 (0.8초 디바운스)
+// ✅ 도시 입력 시 카카오로 좌표 변환 후 날씨 조회 (0.8초 디바운스)
 function onCityInput() {
   updateMapChips();
   clearTimeout(weatherTimer);
   const city = document.getElementById('city').value.trim();
   if (!city) { document.getElementById('weatherCard').style.display = 'none'; return; }
-  weatherTimer = setTimeout(() => fetchWeather(city), 800);
+  weatherTimer = setTimeout(() => geocodeAndFetchWeather(city), 800);
 }
 
-async function fetchWeather(city) {
+// ✅ 카카오 Places로 한국어 도시명 → 좌표 변환 후 날씨 조회
+function geocodeAndFetchWeather(city) {
   const card = document.getElementById('weatherCard');
   const content = document.getElementById('weatherContent');
   card.style.display = 'block';
   content.innerHTML = '<div class="weather-loading">🌡️ 날씨 불러오는 중...</div>';
 
+  if (!kakaoMap) { fetchWeather({ city }); return; }
+
+  new kakao.maps.services.Places().keywordSearch(city, function(result, status) {
+    if (status === kakao.maps.services.Status.OK) {
+      const lat = parseFloat(result[0].y);
+      const lon = parseFloat(result[0].x);
+      fetchWeather({ city, lat, lon }); // ✅ 좌표 우선 전달
+    } else {
+      fetchWeather({ city }); // 좌표 못 찾으면 도시명으로 fallback
+    }
+  });
+}
+
+async function fetchWeather({ city, lat, lon }) {
+  const card = document.getElementById('weatherCard');
+  const content = document.getElementById('weatherContent');
+
   try {
     const res = await fetch('/.netlify/functions/weather', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ city })
+      body: JSON.stringify({ city, lat, lon }) // ✅ 좌표 함께 전달
     });
     const data = await res.json();
     if (!res.ok) { content.innerHTML = `<div class="weather-error">⚠️ ${data.error || '날씨를 불러오지 못했습니다'}</div>`; return; }
