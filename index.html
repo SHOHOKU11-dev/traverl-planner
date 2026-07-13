@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>일정 플래너</title>
+<title>하루 여행 플래너</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1bf23e4e4bf17407ee3a0c0680628d9b&libraries=services,clusterer"></script>
 <style>
@@ -707,7 +707,8 @@ async function getDirections(origin, destination) {
   try {
     const res=await fetch('/.netlify/functions/directions',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({origin,destination})
+      // ✅ 선택한 이동수단 함께 전달
+      body:JSON.stringify({origin, destination, transports: selectedTransports})
     });
     if (!res.ok) return null; return await res.json();
   } catch { return null; }
@@ -879,11 +880,13 @@ function renderResult(schedule, transitData) {
     <div class="timeline">
       ${places.map((p,i)=>{
         const transit=transitData&&transitData[i-1];
+        // ✅ 선택한 이동수단에 맞는 정보만 표시
         const transitHtml=(i>0&&transit)?`
           <div style="margin-left:54px;margin-bottom:4px;">
             <div class="transit-info">
-              ${transit.walk?`🚶 도보 ${transit.walk.duration}분 (${transit.walk.distance}km)`:''}
-              ${transit.car?` · 🚗 차량 ${transit.car.duration}분`:''}
+              ${transit.walk&&selectedTransports.includes('도보')?`🚶 도보 ${transit.walk.duration}분 (${transit.walk.distance}km)`:''}
+              ${transit.transit&&selectedTransports.includes('대중교통')?`🚇 대중교통 약 ${transit.transit.duration}분 (${transit.transit.distance}km)`:''}
+              ${transit.car&&selectedTransports.includes('자차')?`🚗 차량 ${transit.car.duration}분 (${transit.car.distance}km)`:''}
             </div>
           </div>`:'';
         return `${transitHtml}
