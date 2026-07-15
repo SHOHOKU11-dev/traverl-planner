@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>하루 여행 플래너</title>
+<title>응가의 하루</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1bf23e4e4bf17407ee3a0c0680628d9b&libraries=services,clusterer"></script>
 <style>
@@ -797,7 +797,7 @@ ${limits?`8. 제한사항: ${limits}`:''}
     });
 
     currentSchedule=schedule; renderResult(schedule,[]);
-    schedule.places.forEach((p,i)=>{ if(p.isRecommended) geocodeAndMark(city?`${city} ${p.name}`:p.name, p.name, i+1); });
+    // ✅ 마커 표시는 fetchAllDirections에서 정확한 좌표로 일괄 처리
     btn.innerHTML='<span>🗺️</span> 이동시간 계산 중...';
     const transitData=await fetchAllDirections(schedule.places,city);
     renderResult(schedule,transitData);
@@ -807,18 +807,56 @@ ${limits?`8. 제한사항: ${limits}`:''}
 
 async function fetchAllDirections(places,city) {
   const coords=[];
-  for (const p of places) {
-    const coord=await new Promise(resolve=>{
-      new kakao.maps.services.Places().keywordSearch(city?`${city} ${p.name}`:p.name,(result,status)=>{
-        if(status===kakao.maps.services.Status.OK) resolve({x:result[0].x,y:result[0].y}); else resolve(null);
+  // ✅ 좌표 수집하면서 마커도 정확한 위치로 다시 표시
+  markers.forEach(m=>m.setMap(null)); markers=[]; infowindows=[];
+
+  for (let idx=0; idx<places.length; idx++) {
+    const p = places[idx];
+    // 카테고리 포함해서 검색 정확도 향상
+    const catKeyword = p.category ? p.category.replace(/[🍽️🏛️🛍️🌿🎭📍]/g,'').trim() : '';
+    const query = city ? `${city} ${p.name} ${catKeyword}`.trim() : p.name;
+
+    const result = await new Promise(resolve=>{
+      new kakao.maps.services.Places().keywordSearch(query,(result,status)=>{
+        if(status===kakao.maps.services.Status.OK) resolve(result[0]);
+        else {
+          // 카테고리 없이 재시도
+          new kakao.maps.services.Places().keywordSearch(
+            city?`${city} ${p.name}`:p.name,
+            (r2,s2)=>{ resolve(s2===kakao.maps.services.Status.OK ? r2[0] : null); }
+          );
+        }
       });
     });
-    coords.push(coord);
+
+    if (result) {
+      const coord = {x: result.x, y: result.y};
+      coords.push(coord);
+      // ✅ 정확한 좌표로 마커 재표시
+      if (kakaoMap) {
+        const pos = new kakao.maps.LatLng(result.y, result.x);
+        const marker = new kakao.maps.Marker({position:pos, map:kakaoMap});
+        const iw = new kakao.maps.InfoWindow({
+          content:`<div style="padding:8px 12px;font-size:13px;font-weight:700;color:#1565C0;white-space:nowrap">${idx+1}. ${esc(p.name)}</div>`
+        });
+        kakao.maps.event.addListener(marker,'click',function(){infowindows.forEach(w=>w.close()); iw.open(kakaoMap,marker);});
+        markers.push(marker); infowindows.push(iw);
+      }
+    } else {
+      coords.push(null);
+      if (kakaoMap) { markers.push(null); infowindows.push(null); }
+    }
   }
+
+  // 이동시간 계산
   const transitData=[];
   for (let i=0;i<coords.length-1;i++) {
-    if(coords[i]&&coords[i+1]) { const r=await getDirections(coords[i],coords[i+1]); transitData.push(r); }
-    else transitData.push(null);
+    if(coords[i]&&coords[i+1]) {
+      const r=await getDirections(coords[i],coords[i+1]);
+      transitData.push(r);
+    } else {
+      transitData.push(null);
+    }
   }
   return transitData;
 }
@@ -880,14 +918,19 @@ function renderResult(schedule, transitData) {
     <div class="timeline">
       ${places.map((p,i)=>{
         const transit=transitData&&transitData[i-1];
-        // ✅ 선택한 이동수단에 맞는 정보만 표시
-        const transitHtml=(i>0&&transit)?`
+        // ✅ 선택 수단별 표시 + 내용 없으면 박스 자체 숨김
+        const transitParts = [];
+        if (transit) {
+          if (transit.walk && selectedTransports.includes('도보'))
+            transitParts.push(`🚶 도보 ${transit.walk.duration}분 (${transit.walk.distance}km)`);
+          if (transit.transit && selectedTransports.includes('대중교통'))
+            transitParts.push(`🚇 대중교통 약 ${transit.transit.duration}분 (${transit.transit.distance}km)`);
+          if (transit.car && selectedTransports.includes('자차'))
+            transitParts.push(`🚗 차량 ${transit.car.duration}분 (${transit.car.distance}km)`);
+        }
+        const transitHtml=(i>0&&transitParts.length)?`
           <div style="margin-left:54px;margin-bottom:4px;">
-            <div class="transit-info">
-              ${transit.walk&&selectedTransports.includes('도보')?`🚶 도보 ${transit.walk.duration}분 (${transit.walk.distance}km)`:''}
-              ${transit.transit&&selectedTransports.includes('대중교통')?`🚇 대중교통 약 ${transit.transit.duration}분 (${transit.transit.distance}km)`:''}
-              ${transit.car&&selectedTransports.includes('자차')?`🚗 차량 ${transit.car.duration}분 (${transit.car.distance}km)`:''}
-            </div>
+            <div class="transit-info">${transitParts.join(' · ')}</div>
           </div>`:'';
         return `${transitHtml}
         <div class="timeline-item">
